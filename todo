@@ -1,0 +1,6 @@
+update.py: Kommandozeilenargumente die results Ordner enthalten sollen zu
+           Aktuallisierung bzw. Initialisierung der Isodelta-Datenbank führen.
+
+run.py: Script, welches pararun und euo.run benutzt um parameter durchzufahren und
+        gleichzeitig die die isolierten Energie-Shifts aus der Datenbank abzurufen.
+        Außerdem sollen die die Input folder für jeden Run automatisch erzeugt werden.
