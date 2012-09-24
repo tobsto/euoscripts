@@ -182,7 +182,7 @@ class runcmd:
 	######################################################################
 	def get_option(self, key, default=None):
 		# get command line options
-		options=self.cmd.split()
+		options=self.cmd.partition('euo.out')[2].split()
 		# extract temperature (if none given, default is 40 K)
 		try:
 			i=options.index(key)
@@ -196,7 +196,7 @@ class runcmd:
 				exit(1)
 	def option_exists(self, key):
 		# get command line options
-		options=self.cmd.split()
+		options=self.cmd.partition('euo.out')[2].split()
 		# extract temperature (if none given, default is 40 K)
 		try:
 			i=options.index(key)
@@ -260,20 +260,21 @@ class runcmd:
 		# Search search 'resultsFolder' for sub folders containing results with
 		# smaller temperatures thant 'T' 
 		resultFolders=[]
-		for d in os.listdir(path):
-			folder=os.path.join(path, d)
-			if os.path.isdir(folder) and isResults(folder):
-				resultFolders.append((folder, extractResults(folder)[3]))
+		if os.path.exists(path):
+			for d in os.listdir(path):
+				folder=os.path.join(path, d)
+				if os.path.isdir(folder) and isResults(folder):
+					resultFolders.append((folder, extractResults(folder)[3]))
 	
-		# find a folder with lower temperature than T
-		tmax=0.0
-		for (f,t) in resultFolders:
-			if t>tmax and t<=T:
-				tmax=t
-				inputFolder=f
-	
-		if tmax>0.0:
-			self.cmd+=" -i " + inputFolder
+			# find a folder with lower temperature than T
+			tmax=0.0
+			for (f,t) in resultFolders:
+				if t>tmax and t<=T:
+					tmax=t
+					inputFolder=f
+		
+			if tmax>0.0:
+				self.cmd+=" -i " + inputFolder
 
 #db=isodeltabase()
 #db.fill(['../../runs/runs_version-a177549/pure_ncr0.50/n3/','../../runs/runs_version-a177549/n5/'])

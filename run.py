@@ -3,6 +3,7 @@
 import itertools as it
 import subprocess
 import sys
+import os
 import job
 import pararun
 import euo
@@ -36,7 +37,8 @@ def main():
 	parser = argparse.ArgumentParser(description='Run euo programm')
 	parser.add_argument('config', help='config file')
 	args = parser.parse_args()
-	cfg_name=args.config.split('.')[0]
+	sys.path.append(os.getcwd())
+	cfg_name=args.config.partition('.')[0]
 	exec('import %s as %s' % (cfg_name, 'cfg'))
 
 	# set mpicmd accoring to host
@@ -47,9 +49,9 @@ def main():
 	elif host=='agem.th.physik.uni-bonn.de' or host=='bgem.th.physik.uni-bonn.de':
 		mpicmd='mpirun -np %d' % cfg.np
 	elif host=='login':
-		mpicmd='"mpirun.openmpi --mca btl ^udapl,openib --mca btl_tcp_if_include eth0 -x LD_LIBRARY_PATH --hostfile /users/stollenw/hostfile -np %d' % cfg.np
+		mpicmd='mpirun.openmpi --mca btl ^udapl,openib --mca btl_tcp_if_include eth0 -x LD_LIBRARY_PATH --hostfile /users/stollenw/hostfile -np %d' % cfg.np
 	else:
-		mpicmd='"mpirun.openmpi --hostfile /users/stollenw/hostfile -np %d' % cfg.np
+		mpicmd='mpirun --hostfile /users/stollenw/runs/hostfile -np %d' % cfg.np
 	
 	runcmd="%s %s" % (mpicmd, cfg.basecmd)
 
@@ -62,7 +64,7 @@ def main():
 	elif cfg.isoFlag:
 		modfunc=modfunc_iso
 
-	p=pararun.pararun(runcmd, cfg.para_list, cfg.output, runfunc=pararun.run_submit, modfunc=modfunc, log=cfg.log, email='stollenwerk@th.physik.uni-bonn.de')
+	p=pararun.pararun(runcmd, cfg.para_list, cfg.output, runfunc=pararun.run_submit, modfunc=modfunc, input=cfg.input, log=cfg.log, email='stollenwerk@th.physik.uni-bonn.de')
 	p.run()
 
 if __name__=="__main__":

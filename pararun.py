@@ -3,6 +3,7 @@
 import itertools as it
 import subprocess
 import sys
+import os
 import job
 
 class sformat(object):
@@ -24,7 +25,8 @@ def run_shell(cmd, logstring, append, email, mailcmd):
 	subprocess.call(cmd, shell=True)
 
 class pararun:
-	def __init__(self, bcmd, plist, output=None, runfunc=None, modfunc=None, log='run', append=True, email='stollenwerk@th.physik.uni-bonn.de', mailcmd='mailx -s'):
+	def __init__(self, bcmd, plist, output=None, runfunc=None, modfunc=None, input=None, log='run', append=True, email='stollenwerk@th.physik.uni-bonn.de', mailcmd='mailx -s'):
+
 		self.basecmd=bcmd
 		self.para_list=plist
 		if output!=None:
@@ -39,6 +41,7 @@ class pararun:
 		self.email=email
 		self.mailcmd=mailcmd
 		self.modfunc=modfunc
+		self.input=input
 
 		#parse parameter list
 		self.names=list(pl[0] for pl in plist)
@@ -47,6 +50,12 @@ class pararun:
 		self.parameter=list(it.product(*list(pl[3] for pl in plist)))
 
 	def run(self):
+		# remove log files if they exist
+		if os.path.exists("%s.log" % self.log):
+			os.remove("%s.log" % self.log)
+		if os.path.exists("%s.err" % self.log):
+			os.remove("%s.err" % self.log)
+		first=True
 		for para in self.parameter:
 			runcmd=self.basecmd
 			outputFolder=''
@@ -60,13 +69,14 @@ class pararun:
 				if not self.append:
 					logstring+= code_string(n, p, f.Type, f.width, f.precision)
 
-
+			if self.input!=None and first:
+				runcmd+=" %s %s" % (self.input[0], self.input[1])
 			if self.output!=None:
 				runcmd+=" %s %s%s" % (self.output[0],outputFolder, self.output[2])
 			if self.modfunc!=None:
 				runcmd=self.modfunc(runcmd)
 			self.runfunc(runcmd, logstring, self.append, self.email, self.mailcmd)
-
+			first=False
 
 # specify how to execute the commands (optional, default is execution in shell)
 def run_shell_log(cmd, logstring, append, email, mailcmd):
