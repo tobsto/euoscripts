@@ -5,6 +5,17 @@ import subprocess
 
 ##############################################################################
 ##############################################################################
+##### Various functions ######################################################
+##############################################################################
+##############################################################################
+
+# get hostname
+def get_host():
+	proc = subprocess.Popen('hostname', stdout=subprocess.PIPE)
+	host = proc.stdout.read().rstrip('\n')
+	return host
+##############################################################################
+##############################################################################
 ##### Extract results from a given folder ####################################
 ##############################################################################
 ##############################################################################
@@ -114,8 +125,10 @@ class isodeltabase:
 	def download(self, remotepath='stollenw@stgeorgenamreith.th.physik.uni-bonn.de:/home/stollenw/projects/euo/database/isodelta.db'):
 		cmd='scp %s isodelta.db' % remotepath
 		try:
-			subprocess.call(cmd, shell=True)
+			proc = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE)
+			proc.wait()
 			self.read('isodelta.db')
+			os.remove('isodelta.db')
 		except:
 			print 'Error: Failed to retrieve remote isodelta database: %s' % remotepath
 			print 'Break.'
@@ -160,7 +173,7 @@ class isodeltabase:
 ##### Class managing the EuO program run commands ############################
 ##############################################################################
 ##############################################################################
-class run:
+class runcmd:
 	def __init__(self, c):
 		self.cmd=c
 
@@ -262,10 +275,10 @@ class run:
 		if tmax>0.0:
 			self.cmd+=" -i " + inputFolder
 
-db=isodeltabase()
-db.fill(['../../runs/runs_version-a177549/pure_ncr0.50/n3/','../../runs/runs_version-a177549/n5/'])
-db.write('../../database/isodelta.db')
-r=run('euo.out -n 5 -m 5 --n_cr 0.5 -o ../../runs/runs_version-a177549/n5/output_t050/ -t 60')
-r.add_input('../../runs/runs_version-a177549/n5_m2_ncr0.10/')
-r.add_isodeltas()
-print r.cmd
+#db=isodeltabase()
+#db.fill(['../../runs/runs_version-a177549/pure_ncr0.50/n3/','../../runs/runs_version-a177549/n5/'])
+#db.write('../../database/isodelta.db')
+#r=run('euo.out -n 5 -m 5 --n_cr 0.5 -o ../../runs/runs_version-a177549/n5/output_t050/ -t 60')
+#r.add_input('../../runs/runs_version-a177549/n5_m2_ncr0.10/')
+#r.add_isodeltas()
+#print r.cmd
