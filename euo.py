@@ -274,7 +274,7 @@ class runcmd:
 					inputFolder=f
 		
 			if tmax>0.0:
-				self.cmd+=" -i " + inputFolder
+				self.cmd+=" -i " + inputFolder + "/"
 
 #db=isodeltabase()
 #db.fill(['../../runs/runs_version-a177549/pure_ncr0.50/n3/','../../runs/runs_version-a177549/n5/'])
