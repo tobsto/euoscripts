@@ -46,7 +46,7 @@ def main():
 	mpicmd = ''
 	if host=='stgeorgenamreith':
 		mpicmd='mpirun -np %d' % cfg.np
-	elif host=='agem.th.physik.uni-bonn.de' or host=='bgem.th.physik.uni-bonn.de':
+	elif host=='agem.th.physik.uni.bonn.de' or host=='bgem.th.physik.uni-bonn.de':
 		mpicmd='mpirun -np %d' % cfg.np
 	elif host=='login':
 		mpicmd='mpirun.openmpi --mca btl ^udapl,openib --mca btl_tcp_if_include eth0 -x LD_LIBRARY_PATH --hostfile /users/stollenw/hostfile -np %d' % cfg.np
