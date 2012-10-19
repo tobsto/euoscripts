@@ -47,7 +47,7 @@ def main():
 		print cmd
 		subprocess.call(cmd, shell=True)
 	else:
-		print "Error: Failed to finde working directory: %s in remote directory: %s. Break" % (cwd, output)
+		print "Error: Failed to find working directory: %s in remote directory: %s. Break" % (cwd, output)
 
 if __name__=="__main__":
 	main()

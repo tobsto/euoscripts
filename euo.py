@@ -66,7 +66,7 @@ def extractResults (resultsFolder):
 		exit(1)
 		
 	parafilename="%s/parameter.cfg" % resultsFolder
-	return (material, N, nc, T, Delta);
+	return (material, N, nc, T, Delta, resultsFolder);
 
 ##############################################################################
 ##############################################################################
@@ -87,12 +87,12 @@ def tostring(val):
 
 class isodeltabase:
 	def __init__(self):
-		self.names=('material', 'N', 'nc', 'T', 'Delta')
+		self.names=('material', 'N', 'nc', 'T', 'Delta', 'origin')
 
 	# write database to file
 	def write(self, filename):
 		f=open(filename, 'w')
-		f.write('#mat\tN\tnc\t\t\tT\t\t\tDelta\n')
+		f.write('#mat\tN\tnc\t\t\tT\t\t\tDelta\t\t\torigin\n')
 
 		for d in self.data:
 			for val in d:
@@ -103,7 +103,7 @@ class isodeltabase:
 	# fill database 
 	def set(self, d):
 		self.data=d
-		self.names=('material', 'N', 'nc', 'T', 'Delta')
+		self.names=('material', 'N', 'nc', 'T', 'Delta', 'origin')
 
 	# read database from file
 	def read(self, filename):
@@ -119,7 +119,8 @@ class isodeltabase:
 			nc_val=float(d[2])
 			T_val=float(d[3])
 			Delta_val=float(d[4])
-			self.data.append((material_val, N_val, nc_val, T_val, Delta_val))
+			origin_val=d[5]
+			self.data.append((material_val, N_val, nc_val, T_val, Delta_val, origin_val))
 
 	# read in database from remote file
 	def download(self, remotepath='stollenw@stgeorgenamreith.th.physik.uni-bonn.de:/home/stollenw/projects/euo/database/isodelta.db'):
@@ -136,7 +137,7 @@ class isodeltabase:
 		
 		
 	# check if special dataset exists in database
-	def exists(self, material, N, nc, T):
+	def exists(self, material, N, nc, T, delta=None, origin=None):
 		for d in self.data:
 			if material==d[0] and N==d[1] and nc==d[2] and T==d[3]:
 				return True
@@ -157,15 +158,16 @@ class isodeltabase:
 		exit(1)
 	
 	# fill database by extracting results form a special folder
-	def fill(self, topResultsFolders):
-		self.data=[]
+	def fill(self, topResultsFolders, overwrite=True):
+		if overwrite:
+			self.data=[]
 		for topfolder in topResultsFolders:
 			for d in os.listdir(topfolder):
 				folder=os.path.join(topfolder, d)
-				if os.path.isdir(folder) and isResults(folder):
+				if os.path.isdir(folder) and isResults(folder) and not self.exists(*extractResults(folder)):
 					self.data.append(extractResults(folder))
 
-		# sort by temperature
+		# sort by 1st column i.e. N 
 		self.data=sorted(self.data, key = lambda element : element[0])
 
 ##############################################################################
