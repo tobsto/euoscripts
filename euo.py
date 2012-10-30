@@ -66,7 +66,7 @@ def extractResults (resultsFolder):
 		exit(1)
 		
 	parafilename="%s/parameter.cfg" % resultsFolder
-	return (material, N, nc, T, Delta, resultsFolder);
+	return (material, N, nc, T, Delta, os.path.abspath(resultsFolder));
 
 ##############################################################################
 ##############################################################################
@@ -112,7 +112,7 @@ class isodeltabase:
 		f.close()
 
 		self.data=[]
-		for l in lines[2:]:
+		for l in lines[1:]:
 			d=l.split()
 			material_val=d[0]
 			N_val=int(d[1])
