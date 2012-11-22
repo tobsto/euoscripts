@@ -123,7 +123,7 @@ class isodeltabase:
 			self.data.append((material_val, N_val, nc_val, T_val, Delta_val, origin_val))
 
 	# read in database from remote file
-	def download(self, remotepath='stollenw@stgeorgenamreith.th.physik.uni-bonn.de:/home/stollenw/projects/euo/database/isodelta.db'):
+	def download(self, remotepath='stollenw@stgeorgenamreith.th.physik.uni-bonn.de:/users/stollenw/projects/euo/database/isodelta.db'):
 		cmd='scp %s isodelta.db' % remotepath
 		try:
 			proc = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE)
