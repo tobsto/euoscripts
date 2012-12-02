@@ -27,8 +27,18 @@ def extractParameter (filename, name):
 		if l.startswith(name):
 			value=l.split()[2]
 			return value
-	print "Warning: parameter %s in file %s not found!" % (name, filename)
+	print "Error: parameter %s in file %s not found!" % (name, filename)
 	exit(1)
+
+def parameterExists (filename, name):
+	parafile=open(filename, 'r')
+	lines=parafile.readlines()
+	parafile.close()
+	exists=False
+	for l in lines:
+		if l.startswith(name):
+			exists=True
+	return exists
 
 def extractResultValue (filename):
 	f=open(filename, 'r')
@@ -43,30 +53,118 @@ def isResults (resultsFolder):
 		return True
 	else:
 		return False
-def extractResults (resultsFolder):
+
+# read in parameter file and map this onto a material class. Return the other material defining parameters
+def extractSystemParameter(parafilename):
+	concentration      = float(extractParameter(parafilename, 'concentration'     ))
+	temperature        = float(extractParameter(parafilename, 'temperature'       ))
+	N                  =   int(extractParameter(parafilename, 'N'                 ))
+	N0                 =   int(extractParameter(parafilename, 'N0'                ))
+	Ed0                =   int(extractParameter(parafilename, 'Ed0'               ))
+	gamma              = float(extractParameter(parafilename, 'gamm'              ))
+	impurity           =       extractParameter(parafilename, 'impurity'          )
+	ncc_oxy            = float(extractParameter(parafilename, 'ncc_oxy'           ))
+	ncc_gad            = float(extractParameter(parafilename, 'ncc_gad'           ))
+	ncr                = float(extractParameter(parafilename, 'n_cr'              ))
+	Delta_g            = float(extractParameter(parafilename, 'Delta_g'           ))
+	J4f                = float(extractParameter(parafilename, 'J4f'               ))
+	Jcf                = float(extractParameter(parafilename, 'Jcf'               ))
+	D0                 = float(extractParameter(parafilename, 'D0 '               ))
+	W                  = float(extractParameter(parafilename, 'W  '               ))
+	spin0              = float(extractParameter(parafilename, 'spin0'             ))
+	Ul                 = float(extractParameter(parafilename, 'Ul'                ))
+	Ur                 = float(extractParameter(parafilename, 'Ur'                ))
+	Delta_l0           = float(extractParameter(parafilename, 'Delta_l0'          ))
+	Delta_r0           = float(extractParameter(parafilename, 'Delta_r0'          ))
+	Delta_W            = float(extractParameter(parafilename, 'Delta_W'           ))
+	eta                = float(extractParameter(parafilename, 'eta'               ))
+	iota               = float(extractParameter(parafilename, 'iota'              ))
+	domega_log_max     = float(extractParameter(parafilename, 'domega_log_max'    ))
+	omega_log_1        = float(extractParameter(parafilename, 'omega_log_1'       ))
+	N_log              = float(extractParameter(parafilename, 'N_log'             ))
+	N_fermi            = float(extractParameter(parafilename, 'N_fermi'           ))
+	domega_min_steps_l = float(extractParameter(parafilename, 'domega_min_steps_l'))
+	domega_min_steps_r = float(extractParameter(parafilename, 'domega_min_steps_r'))
+	#omega_min          = float(extractParameter(parafilename, 'omega_min'         ))
+	#omega_max          = float(extractParameter(parafilename, 'omega_max'         ))
+	dntol              = float(extractParameter(parafilename, 'dntol'             ))
+	fltol              = float(extractParameter(parafilename, 'fltol'             ))
+	tol                = float(extractParameter(parafilename, 'tol'               ))
+	#wr1                = float(extractParameter(parafilename, 'wr1'               ))
+	#wr0                = float(extractParameter(parafilename, 'wr0'               ))
+	#wru                = float(extractParameter(parafilename, 'wru'               ))
+	#max1               = float(extractParameter(parafilename, 'max1'              ))
+	#max2               = float(extractParameter(parafilename, 'max2'              ))
+
+	mirror=False
+	if parameterExists(parafilename, 'mirror'):
+		mirror=True
+	insulator=False
+	if parameterExists(parafilename, 'insulator'):
+		insulator=True
+
+	# map parameters to system configuration
+	# check common parameters
+	if not (Ed0==0.0 and gamma==0.05 and J4f==7e-5 and D0==8 and W==0 and spin0==0 and Ul==0 and Ur==0 and iota==1E-4 and domega_log_max==0.01 and omega_log_1==0.1 and N_log==200 and N_fermi==100 and domega_min_steps_l==1E-4 and domega_min_steps_r==1E-3 and dntol==1E-6 and fltol==1E-7 and tol==1E-3):
+		print "Error: System parameter are non standard. Folder: %s" % resultsFolder
+		exit(1)
+
+	# define material classed by system relevant parameters:
+	# N0
+	# impurity
+	# ncc_oxy
+	# ncc_gad
+	# n_cr
+	# Delta_g
+	# Jcf
+	# eta 
+	# mirror
+	# insulator
+	material=''
+	isolated=False
+	if (N0==0 and impurity=='None' and Jcf==0.0 and eta==0.0 and mirror==True):
+		material='Metal'
+		# double number of layers since this material serves as a capping layer
+		N=2*N-1
+		isolated=True
+	elif (N0==0 and impurity=='None' and Jcf==0.05 and eta==0.0 and mirror==True):
+		material='Heisenberg-Metal'
+		# double number of layers since this material serves as a capping layer
+		N=2*N-1
+		isolated=True
+	#elif (N0==0, impurity=='None' and Jcf==0.00 and eta==0.0 and mirror==True and bandSplit==0.01):
+	#	material='Band-Magnetic-Metal          '
+	#	# double number of layers since this material serves as a capping layer
+	#	N=2*N-1
+	#	isolated=True
+	elif (N0==0 and impurity=='Gd' and ncc_gad==0.9952 and Jcf==0.05 and eta==1e-9 and mirror==True):
+		material='EuGdO'
+		isolated=True
+	elif (N0!=0 and impurity=='Gd' and ncc_gad==0.9952 and Jcf==0.05 and eta==1e-4 and mirror==True and insulator==False):
+		material='EuGdO-Metal-eta1e-4'
+	elif (N0!=0 and impurity=='Gd' and ncc_gad==0.9952 and Jcf==0.05 and eta==1e-7 and mirror==True and insulator==False):
+		material='EuGdO-Metal-eta1e-7'
+	else:
+		print "Error: Unable to extract material type from file %s" % parafilename
+		exit(1)
+
+	return (material, N, N0, concentration, ncr, temperature, Delta_W, isolated)
+
+def extractIsodeltaParameter (resultsFolder):
+	# get system parameter
 	parafilename="%s/parameter.cfg" % resultsFolder
+	(material, N, N0, concentration, ncr, temperature, Delta_W, isolated)=extractSystemParameter(parafilename)
+
+	# get Delta value
 	mufilename="%s/results/mu.dat" % resultsFolder
 	mu=float(extractResultValue(mufilename))
 	Delta=-mu
-	nc=float(extractParameter(parafilename, 'concentration'))
-	T=float(extractParameter(parafilename, 'temperature'))
-	N=int(extractParameter(parafilename, 'N'))
-	impurity=extractParameter(parafilename, 'impurity')
-	material=''
-	if impurity=='Gd':
-		material='EuO'
-	elif impurity=='None':
-		material='Sub'
-		# calculation of N layer in mirror symmetric mode
-		# corresponds to 2*N-1 layer in non mirror symmetric
-		# mode
-		N=2*N-1
-	else:
-		print "Error: Unable to extract material type from folder %s" % resultsFolder
-		exit(1)
 		
-	parafilename="%s/parameter.cfg" % resultsFolder
-	return (material, N, nc, T, Delta, os.path.abspath(resultsFolder));
+	if isolated:
+		return (material, N, concentration, temperature, Delta, os.path.abspath(resultsFolder));
+	else:
+		print "Error: Results in folder %s does not correspond to an isolated material. Material is %s" % (resultsFolder, material)
+		exit(1)
 
 ##############################################################################
 ##############################################################################
@@ -88,14 +186,16 @@ def tostring(val):
 class isodeltabase:
 	def __init__(self):
 		self.names=('material', 'N', 'nc', 'T', 'Delta', 'origin')
+		self.data=[]
 
 	# write database to file
 	def write(self, filename):
 		f=open(filename, 'w')
-		f.write('#mat\tN\tnc\t\t\tT\t\t\tDelta\t\t\torigin\n')
-
+		f.write('{:<30}\tN\tnc\t\t\tT\t\t\tDelta\t\t\torigin\n'.format('#mat'))
 		for d in self.data:
-			for val in d:
+			f.write('{:<30}'.format(d[0]))
+			f.write('\t')
+			for val in d[1:]:
 				f.write(tostring(val))
 				f.write('\t')
 			f.write('\n')
@@ -137,7 +237,7 @@ class isodeltabase:
 		
 		
 	# check if special dataset exists in database
-	def exists(self, material, N, nc, T, delta=None, origin=None):
+	def exists(self, material, N, nc, T):
 		for d in self.data:
 			if material==d[0] and N==d[1] and nc==d[2] and T==d[3]:
 				return True
@@ -164,8 +264,11 @@ class isodeltabase:
 		for topfolder in topResultsFolders:
 			for d in os.listdir(topfolder):
 				folder=os.path.join(topfolder, d)
-				if os.path.isdir(folder) and isResults(folder) and not self.exists(*extractResults(folder)):
-					self.data.append(extractResults(folder))
+				if os.path.isdir(folder) and isResults(folder):
+					(material, N, nc, T, Delta, path)=extractIsodeltaParameter(folder)
+					if not self.exists(material, N, nc, T):
+						print "Adding dataset: %s, N=%03i, nc=%06.4f, T=%05.1f, Delta=%01.9f, Source=%s" %(material, N, nc, T, Delta, path)
+						self.data.append((material, N, nc, T, Delta, path))
 
 		# sort by 1st column i.e. N 
 		self.data=sorted(self.data, key = lambda element : element[0])
@@ -227,10 +330,10 @@ class runcmd:
 
 		# get Deltas (isolated energy shifts) for EuO and metallic substrate
 		# for the insulating case, just shift Delta_r by Delta_g
-		Delta_l=db.getDelta('EuO', N, ni, T)
+		Delta_l=db.getDelta('EuGdO', N, ni, T)
 		self.cmd+=" --Delta_l0 %0.15e" % Delta_l
 		if not insulator:
-			Delta_r=db.getDelta('Sub', N0, ncr, T)
+			Delta_r=db.getDelta('Metal', N0, ncr, T)
 			self.cmd+=" --Delta_r0 %0.15e" % Delta_r
 
 	#######################################################################
@@ -266,7 +369,7 @@ class runcmd:
 			for d in os.listdir(path):
 				folder=os.path.join(path, d)
 				if os.path.isdir(folder) and isResults(folder):
-					resultFolders.append((folder, extractResults(folder)[3]))
+					resultFolders.append((folder, extractIsodeltaParameter(folder)[3]))
 	
 			# find a folder with lower temperature than T
 			tmax=0.0
