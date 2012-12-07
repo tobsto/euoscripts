@@ -9,21 +9,35 @@ import pararun
 import euo
 import argparse
 
-def modfunc_iso(cmd):
+def modfunc_iso(cmd, modpara):
 	rc=euo.runcmd(cmd)
 	rc.add_isodeltas()
 	return rc.cmd
 
-def modfunc_input_iso(cmd):
+def modfunc_input_iso(cmd, modpara):
 	rc=euo.runcmd(cmd)
 	rc.add_isodeltas()
 	rc.add_input()
 	return rc.cmd
-def modfunc_input(cmd):
+
+def modfunc_input(cmd, modpara):
 	rc=euo.runcmd(cmd)
 	rc.add_input()
 	return rc.cmd
-def modfunc_pass(cmd):
+
+def modfunc_special_input_iso(cmd, modpara):
+	rc=euo.runcmd(cmd)
+	rc.add_isodeltas()
+	rc.add_input(modpara)
+	return rc.cmd
+
+def modfunc_special_input(cmd, modpara):
+	rc=euo.runcmd(cmd)
+	rc.add_input(modpara)
+	return rc.cmd
+
+
+def modfunc_pass(cmd, modpara):
 	return cmd
 	
 
@@ -55,14 +69,21 @@ def main():
 
 	#add input and isodeltas
 	modfunc=modfunc_pass
-	if cfg.inputFlag and cfg.isoFlag:
+	if cfg.inputFlag and cfg.isoFlag and cfg.special_input==None:
 		modfunc=modfunc_input_iso
-	elif cfg.inputFlag:
+	elif cfg.inputFlag and cfg.isoFlag and cfg.special_input!=None:
+		modfunc=modfunc_special_input_iso
+	elif cfg.inputFlag and cfg.special_input==None:
 		modfunc=modfunc_input
+	elif cfg.inputFlag and cfg.special_input!=None:
+		modfunc=modfunc_special_input
 	elif cfg.isoFlag:
 		modfunc=modfunc_iso
 
-	p=pararun.pararun(runcmd, cfg.para_list, cfg.output, runfunc=pararun.run_submit, modfunc=modfunc, input=cfg.input, log=cfg.log, email='stollenwerk@th.physik.uni-bonn.de')
+	modpara= cfg.special_input
+
+	#p=pararun.pararun(runcmd, cfg.para_list, cfg.output, runfunc=pararun.run_submit, modfunc=modfunc, modpara=modpara, input=cfg.initial_input, log=cfg.log, email='stollenwerk@th.physik.uni-bonn.de')
+	p=pararun.pararun(runcmd, cfg.para_list, cfg.output, runfunc=pararun.run_print, modfunc=modfunc, modpara=modpara, input=cfg.initial_input, log=cfg.log, email='stollenwerk@th.physik.uni-bonn.de')
 	p.run()
 
 if __name__=="__main__":

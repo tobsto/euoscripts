@@ -154,17 +154,17 @@ def extractIsodeltaParameter (resultsFolder):
 	# get system parameter
 	parafilename="%s/parameter.cfg" % resultsFolder
 	(material, N, N0, concentration, ncr, temperature, Delta_W, isolated)=extractSystemParameter(parafilename)
+		
+	if not isolated:
+		print "Error: Results in folder %s does not correspond to an isolated material. Material is %s" % (resultsFolder, material)
+		exit(1)
 
 	# get Delta value
 	mufilename="%s/results/mu.dat" % resultsFolder
 	mu=float(extractResultValue(mufilename))
 	Delta=-mu
-		
-	if isolated:
-		return (material, N, concentration, temperature, Delta, os.path.abspath(resultsFolder));
-	else:
-		print "Error: Results in folder %s does not correspond to an isolated material. Material is %s" % (resultsFolder, material)
-		exit(1)
+
+	return (material, N, concentration, temperature, Delta, os.path.abspath(resultsFolder))
 
 ##############################################################################
 ##############################################################################
@@ -345,41 +345,45 @@ class runcmd:
 	# with input options is then returned.
 	def add_input (self, path=None):
 		options=self.cmd.split()
-		# extract output folder from run command if path variable is not given
-		if path==None:
-			try:
-				i=options.index('-o')
-				path=os.path.dirname(os.path.abspath(options[i+1].rstrip('/')))
-			except ValueError:
-				path=os.getcwd()
-	
-		# extract temperature (if none given, default is 40 K)
-		T=0.0
-		try:
-			i=options.index('-t')
-			T=float(options[i+1].rstrip('/'))
-		except ValueError:
-			T=40.0
-	
-		inputOptions=''
-		# Search search 'resultsFolder' for sub folders containing results with
-		# smaller temperatures thant 'T' 
-		resultFolders=[]
-		if os.path.exists(path):
-			for d in os.listdir(path):
-				folder=os.path.join(path, d)
-				if os.path.isdir(folder) and isResults(folder):
-					resultFolders.append((folder, extractIsodeltaParameter(folder)[3]))
-	
-			# find a folder with lower temperature than T
-			tmax=0.0
-			for (f,t) in resultFolders:
-				if t>tmax and t<=T:
-					tmax=t
-					inputFolder=f
+		# check if there is already in input folder given, if this is the case, skip
+		if not '-i' in options:
+
+			# extract output folder from run command if path variable is not given
+			if path==None:
+				try:
+					i=options.index('-o')
+					path=os.path.dirname(os.path.abspath(options[i+1].rstrip('/')))
+				except ValueError:
+					path=os.getcwd()
 		
-			if tmax>0.0:
-				self.cmd+=" -i " + inputFolder + "/"
+	
+			# extract temperature (if none given, default is 40 K)
+			T=0.0
+			try:
+				i=options.index('-t')
+				T=float(options[i+1].rstrip('/'))
+			except ValueError:
+				T=40.0
+		
+			inputOptions=''
+			# Search search 'resultsFolder' for sub folders containing results with
+			# smaller temperatures thant 'T' 
+			resultFolders=[]
+			if os.path.exists(path):
+				for d in os.listdir(path):
+					folder=os.path.join(path, d)
+					if os.path.isdir(folder) and isResults(folder):
+						resultFolders.append((folder, extractSystemParameter("%s/parameter.cfg" % folder)[5]))
+		
+				# find a folder with lower temperature than T
+				tmax=0.0
+				for (f,t) in resultFolders:
+					if t>tmax and t<=T:
+						tmax=t
+						inputFolder=f
+			
+				if tmax>0.0:
+					self.cmd+=" -i " + inputFolder + "/"
 
 #db=isodeltabase()
 #db.fill(['../../runs/runs_version-a177549/pure_ncr0.50/n3/','../../runs/runs_version-a177549/n5/'])

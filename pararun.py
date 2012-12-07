@@ -25,7 +25,7 @@ def run_shell(cmd, logstring, append, email, mailcmd):
 	subprocess.call(cmd, shell=True)
 
 class pararun:
-	def __init__(self, bcmd, plist, output=None, runfunc=None, modfunc=None, input=None, log='run', append=True, email='stollenwerk@th.physik.uni-bonn.de', mailcmd='mailx -s'):
+	def __init__(self, bcmd, plist, output=None, runfunc=None, modfunc=None, modpara=None, input=None, log='run', append=True, email='stollenwerk@th.physik.uni-bonn.de', mailcmd='mailx -s'):
 
 		self.basecmd=bcmd
 		self.para_list=plist
@@ -41,6 +41,7 @@ class pararun:
 		self.email=email
 		self.mailcmd=mailcmd
 		self.modfunc=modfunc
+		self.modpara=modpara
 		self.input=input
 
 		#parse parameter list
@@ -74,7 +75,7 @@ class pararun:
 			if self.output!=None:
 				runcmd+=" %s %s%s" % (self.output[0],outputFolder, self.output[2])
 			if self.modfunc!=None:
-				runcmd=self.modfunc(runcmd)
+				runcmd=self.modfunc(runcmd, self.modpara)
 			self.runfunc(runcmd, logstring, self.append, self.email, self.mailcmd)
 			first=False
 
