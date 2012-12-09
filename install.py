@@ -2,7 +2,7 @@
 
 import subprocess
 
-programms=['euo.py', 'get_total_magnetisation.py','job.py', 'pararun.py','reflect.py','run.py','waitrun.py','isodelta_update.py', 'fetchdeb.py', 'isodelta_print.py']
+programms=['euo.py', 'get_total_magnetisation.py','job.py', 'pararun.py','reflect.py','run.py','waitrun.py','isodelta_update.py', 'fetchdeb.py', 'isodelta_print.py', 'jobscheduler.py', 'submit.py', 'queue.py']
 
 destinations=['/home/stollenw/Sonstiges/Programme/bin','/mnt/stollenw/sonstiges/local/python', '/mnt/debcluster/programms/bin']
 for d in destinations:
