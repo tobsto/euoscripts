@@ -50,6 +50,7 @@ def main():
 	# log name: log
 	parser = argparse.ArgumentParser(description='Run euo programm')
 	parser.add_argument('config', help='config file')
+  	parser.add_argument('--dry', action='store_true', help='Simulate runs')
 	args = parser.parse_args()
 	sys.path.append(os.getcwd())
 	cfg_name=args.config.partition('.')[0]
@@ -82,8 +83,9 @@ def main():
 
 	modpara= cfg.special_input
 
-	#p=pararun.pararun(runcmd, cfg.para_list, cfg.output, runfunc=pararun.run_submit, modfunc=modfunc, modpara=modpara, input=cfg.initial_input, log=cfg.log, email='stollenwerk@th.physik.uni-bonn.de')
-	p=pararun.pararun(runcmd, cfg.para_list, cfg.output, runfunc=pararun.run_print, modfunc=modfunc, modpara=modpara, input=cfg.initial_input, log=cfg.log, email='stollenwerk@th.physik.uni-bonn.de')
+	p=pararun.pararun(runcmd, cfg.para_list, cfg.output, runfunc=pararun.run_submit, modfunc=modfunc, modpara=modpara, input=cfg.initial_input, log=cfg.log, email='stollenwerk@th.physik.uni-bonn.de')
+	if args.dry:
+		p=pararun.pararun(runcmd, cfg.para_list, cfg.output, runfunc=pararun.run_print, modfunc=modfunc, modpara=modpara, input=cfg.initial_input, log=cfg.log, email='stollenwerk@th.physik.uni-bonn.de')
 	p.run()
 
 if __name__=="__main__":
