@@ -9,38 +9,6 @@ import pararun
 import euo
 import argparse
 
-def modfunc_iso(cmd, modpara):
-	rc=euo.runcmd(cmd)
-	rc.add_isodeltas()
-	return rc.cmd
-
-def modfunc_input_iso(cmd, modpara):
-	rc=euo.runcmd(cmd)
-	rc.add_isodeltas()
-	rc.add_input()
-	return rc.cmd
-
-def modfunc_input(cmd, modpara):
-	rc=euo.runcmd(cmd)
-	rc.add_input()
-	return rc.cmd
-
-def modfunc_special_input_iso(cmd, modpara):
-	rc=euo.runcmd(cmd)
-	rc.add_isodeltas()
-	rc.add_input(modpara)
-	return rc.cmd
-
-def modfunc_special_input(cmd, modpara):
-	rc=euo.runcmd(cmd)
-	rc.add_input(modpara)
-	return rc.cmd
-
-
-def modfunc_pass(cmd, modpara):
-	return cmd
-	
-
 def main():
 	# read in config file containing
 	# basic command: basecmd
@@ -54,9 +22,9 @@ def main():
 	args = parser.parse_args()
 	sys.path.append(os.getcwd())
 	cfg_name=args.config.partition('.')[0]
-	exec('import %s as %s' % (cfg_name, 'cfg'))
+	exec('import %s as %s' % (cfg_name, 'cfg')) in globals(), locals()
 
-	# set mpicmd accoring to host
+	# set mpicmd according to host
 	host=euo.get_host()
 	mpicmd = ''
 	if host=='agem.th.physik.uni.bonn.de' or host=='bgem.th.physik.uni-bonn.de':
@@ -69,19 +37,24 @@ def main():
 	runcmd="%s %s" % (mpicmd, cfg.basecmd)
 
 	#add input and isodeltas
-	modfunc=modfunc_pass
-	if cfg.inputFlag and cfg.isoFlag and cfg.special_input==None:
-		modfunc=modfunc_input_iso
-	elif cfg.inputFlag and cfg.isoFlag and cfg.special_input!=None:
-		modfunc=modfunc_special_input_iso
-	elif cfg.inputFlag and cfg.special_input==None:
-		modfunc=modfunc_input
-	elif cfg.inputFlag and cfg.special_input!=None:
-		modfunc=modfunc_special_input
-	elif cfg.isoFlag:
-		modfunc=modfunc_iso
-
-	modpara= cfg.special_input
+	modpara= (host, cfg.inputFlag, cfg.special_input, cfg.isoFlag)
+	def modfunc(cmd, host, inputFlag, special_input, isoFlag):
+		rc=euo.runcmd(cmd)
+		if inputFlag:
+			if special_input==None:
+				rc.add_input()
+			else:
+				rc.add_input(special_input)
+		elif special_input!=None:
+			rc.add_input(special_input)
+		if isoFlag:
+			rc.add_isodeltas()
+		if (host=='login'):
+			cmd=rc.cmd
+			cmd += "; runsync.py %s.py" % cfg_name
+			
+		return cmd
+		
 
 	p=pararun.pararun(runcmd, cfg.para_list, cfg.output, runfunc=pararun.run_submit, modfunc=modfunc, modpara=modpara, input=cfg.initial_input, log=cfg.log, email='stollenwerk@th.physik.uni-bonn.de')
 	if args.dry:

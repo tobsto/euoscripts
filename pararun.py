@@ -75,7 +75,7 @@ class pararun:
 			if self.output!=None:
 				runcmd+=" %s %s%s" % (self.output[0],outputFolder, self.output[2])
 			if self.modfunc!=None:
-				runcmd=self.modfunc(runcmd, self.modpara)
+				runcmd=self.modfunc(runcmd, *self.modpara)
 			self.runfunc(runcmd, logstring, self.append, self.email, self.mailcmd)
 			first=False
 
