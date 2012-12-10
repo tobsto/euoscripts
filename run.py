@@ -49,9 +49,9 @@ def main():
 			rc.add_input(special_input)
 		if isoFlag:
 			rc.add_isodeltas()
-		if (host=='login'):
-			cmd=rc.cmd
-			cmd += "; runsync.py %s.py" % cfg_name
+		cmd=rc.cmd
+		#if (host=='login'):
+		#	cmd += "; runsync.py %s.py" % cfg_name
 			
 		return cmd
 		

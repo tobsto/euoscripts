@@ -3,8 +3,7 @@
 import itertools as it
 import subprocess
 import sys
-import os
-import job
+import os import job
 import pararun
 import euo
 import argparse
@@ -43,7 +42,7 @@ def main():
 			break
 	
 	if match:	
-		cmd='rsync -avzt stollenw@%s:/ext/%s/* .' % (host, name)
+		cmd='rsync -avzt stollenw@%s:/checkpoints/%s/* .' % (host, name)
 		print cmd
 		subprocess.call(cmd, shell=True)
 	else:
