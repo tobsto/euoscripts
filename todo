@@ -1,6 +1,15 @@
-update.py: Kommandozeilenargumente die results Ordner enthalten sollen zu
-           Aktuallisierung bzw. Initialisierung der Isodelta-Datenbank führen.
+findTc.py:	Wie pararun.py nur Suche nach Tc. Angabe von Regeln wie:
+            	1.) Rechne Temperaturen (20,40,60,70,80,90,100,110) bis 
+		Magnetisierung kleiner als bestimmter Wert oder maximale
+		Temperature (hier 110) erreicht ist. Im letzeren Fall:
+		Abbruch. Sonst kleinere Schritte nach bestimmten Regeln wie
+		Schrittweite = 1: Temperaturen(81,82,83,84,85,86,87,88,89)
+		bis Magnetisierung kleiner als Bestimmter Wert. 
+		u.s.w
 
-run.py: Script, welches pararun und euo.run benutzt um parameter durchzufahren und
-        gleichzeitig die die isolierten Energie-Shifts aus der Datenbank abzurufen.
-        Außerdem sollen die die Input folder für jeden Run automatisch erzeugt werden.
+
+resultbase.py	Datenbank für die Ergebnisse der Heterostrukturen.
+
+
+Automatisches Berechnen und aktualisieren der isodelta-Datenbank. Dafür wird
+online erreichbare Datenbank benötigt!

@@ -73,7 +73,7 @@ class pararun:
 			if self.input!=None and first:
 				runcmd+=" %s %s" % (self.input[0], self.input[1])
 			if self.output!=None:
-				runcmd+=" %s %s%s" % (self.output[0],outputFolder, self.output[2])
+				runcmd+=" %s %s%s" % (self.output[0], outputFolder, self.output[2])
 			if self.modfunc!=None:
 				runcmd=self.modfunc(runcmd, *self.modpara)
 			self.runfunc(runcmd, logstring, self.append, self.email, self.mailcmd)
@@ -109,4 +109,4 @@ def run_submit(cmd, logstring, append, email, mailcmd):
 	j.run()
 
 def run_print(cmd, logstring, append, email, mailcmd):
-	print cmd, logstring
+	print cmd

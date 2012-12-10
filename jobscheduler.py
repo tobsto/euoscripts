@@ -14,7 +14,7 @@ class queue:
 		self.queuefile=qfile
 		self.lockfile="%s.lock" % qfile
 		try:
-			f = open(qfile, 'r')
+			f = open(qfile, 'a')
 			f.close()
 		except:
 			print "Unable to open queue configuration file %s. Break." % qfile
@@ -22,7 +22,7 @@ class queue:
 	# is config file currently open
 	def waitfree(self):
 		if os.path.exists(self.lockfile):
-			time.sleep(10)
+			time.sleep(1)
 			if os.path.exists(self.lockfile):
 				print "Queue config file: %s is locked. Remove %s manually?. Break." % (self.queuefile, self.lockfile)
 				exit(1)
