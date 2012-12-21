@@ -224,12 +224,12 @@ class isodeltabase:
 
 	# read in database from remote file
 	def download(self, remotepath='stollenw@heisenberg.physik.uni-bonn.de:/home/stollenw/projects/euo/database/isodelta.db'):
-		cmd='scp %s isodelta.db' % remotepath
+		cmd='scp %s isodelta.db.temp' % remotepath
 		try:
 			proc = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE)
 			proc.wait()
-			self.read('isodelta.db')
-			os.remove('isodelta.db')
+			self.read('isodelta.db.temp')
+			os.remove('isodelta.db.temp')
 		except:
 			print 'Error: Failed to retrieve remote isodelta database: %s' % remotepath
 			print 'Break.'
