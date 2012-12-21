@@ -6,7 +6,7 @@ import argparse
 #material_list = ['Metal','Heisenberg-Metal','EuGd0','Band-Magnetic-Metal']
 material_list = ['Metal','Heisenberg-Metal','EuGdO']
 N_list=[2,3,4,5,9,15]
-nc_list=[0.01,1.00]
+nc_list=[0.005,0.01,0.02,0.05,1.00]
 parameter_list=[material_list,N_list,nc_list]
 parameter=list(itertools.product(*parameter_list))
 

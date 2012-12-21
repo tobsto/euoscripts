@@ -24,8 +24,8 @@ def main():
 		time.sleep(args.intervall)
 
 	runcmd = "run.py %s" % args.config
-	print runcmd
-	#subprocess.call(runcmd, shell=True)
+	#print runcmd
+	subprocess.call(runcmd, shell=True)
 
 if __name__=="__main__":
 	main()
