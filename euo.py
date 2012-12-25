@@ -106,7 +106,7 @@ def extractSystemParameter(parafilename):
 	# map parameters to system configuration
 	# check common parameters
 	if not (Ed0==0.0 and gamma==0.05 and J4f==7e-5 and D0==8 and W==0 and spin0==0 and Ul==0 and Ur==0 and iota==1E-4 and domega_log_max==0.01 and omega_log_1==0.1 and N_log==200 and N_fermi==100 and domega_min_steps_l==1E-4 and domega_min_steps_r==1E-3 and dntol==1E-6 and fltol==1E-7 and tol==1E-3):
-		print "Error: System parameter are non standard. Folder: %s" % resultsFolder
+		print "Error: System parameter are non standard. Parameter file: %s" % parafilename
 		exit(1)
 
 	# define material classed by system relevant parameters:
@@ -238,6 +238,9 @@ class isodeltabase:
 		
 	# check if special dataset exists in database
 	def exists(self, material, N, nc, T):
+		# Special case for Metals with half filling. Delta is always equal to 1.0 
+		if material=='Metal' and nc==1.0:
+			return true
 		for d in self.data:
 			if material==d[0] and N==d[1] and nc==d[2] and T==d[3]:
 				return True
@@ -245,6 +248,9 @@ class isodeltabase:
 
 	# extract Delta
 	def getDelta(self, material, N, nc, T):
+		# Special case for Metals with half filling. Delta is always equal to 1.0 
+		if material=='Metal' and nc==1.0:
+			return -1.0
 		for d in self.data:
 			if material==d[0] and N==d[1] and nc==d[2] and T==d[3]:
 				return d[4]
