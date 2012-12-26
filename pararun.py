@@ -7,7 +7,6 @@ import os
 import job
 
 class sformat(object):
-
 	def __init__(self, Type='s', width=1, precision=0):
 		self.Type=Type
 		self.width=width
@@ -25,7 +24,7 @@ def run_shell(cmd, logstring, append, email, mailcmd):
 	subprocess.call(cmd, shell=True)
 
 class pararun:
-	def __init__(self, bcmd, plist, output=None, runfunc=None, modfunc=None, modpara=None, input=None, log='run', append=True, email='stollenwerk@th.physik.uni-bonn.de', mailcmd='mailx -s'):
+	def __init__(self, bcmd, plist, output=None, runfunc=None, modfunc=None, modpara=None, prerun_necessary_func=None, prerun_cmd_func=None, prerun_add_func=None, prerunpara=None, input=None, log='run', append=True, email='stollenwerk@th.physik.uni-bonn.de', mailcmd='mailx -s'):
 
 		self.basecmd=bcmd
 		self.para_list=plist
@@ -42,6 +41,10 @@ class pararun:
 		self.mailcmd=mailcmd
 		self.modfunc=modfunc
 		self.modpara=modpara
+		self.prerun_necessary_func=prerun_necessary_func
+		self.prerun_cmd_func=prerun_cmd_func
+		self.prerun_add_func=prerun_add_func
+		self.prerunpara=prerunpara
 		self.input=input
 
 		#parse parameter list
@@ -76,6 +79,14 @@ class pararun:
 				runcmd+=" %s %s%s" % (self.output[0], outputFolder, self.output[2])
 			if self.modfunc!=None:
 				runcmd=self.modfunc(runcmd, *self.modpara)
+			if self.prerun!=None:
+				# if preparing-run is necessary ...
+				if self.prerun_necessary_func(runcmd, *self.prerunpara):
+					# run it
+					preruncmd=self.prerun_cmd_func(runcmd, *self.prerunpara)
+					self.runfunc(preruncmd, logstring, True, self.email, self.mailcmd)
+				# add preparing-run data to runcmd
+				runcmd=self.prerun_add_func(runcmd, *self.prerunpara)
 			self.runfunc(runcmd, logstring, self.append, self.email, self.mailcmd)
 			first=False
 

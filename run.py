@@ -6,8 +6,9 @@ import sys
 import os
 import job
 import pararun
-import euo
+import database
 import argparse
+import system_parameter
 
 def main():
 	# read in config file containing
@@ -25,9 +26,9 @@ def main():
 	exec('import %s as %s' % (cfg_name, 'cfg')) in globals(), locals()
 
 	# set mpicmd according to host
-	host=euo.get_host()
+	host=database.get_host()
 	mpicmd = ''
-	if host=='agem.th.physik.uni.bonn.de' or host=='bgem.th.physik.uni-bonn.de':
+	if host=='agem.th.physik.uni-bonn.de' or host=='bgem.th.physik.uni-bonn.de':
 		mpicmd='mpirun -np %d' % cfg.np
 	elif host=='login':
 		mpicmd='mpirun.openmpi --mca btl ^udapl,openib --mca btl_tcp_if_include eth0 -x LD_LIBRARY_PATH --hostfile /users/stollenw/hostfile -np %d' % cfg.np
@@ -36,29 +37,44 @@ def main():
 	
 	runcmd="%s %s" % (mpicmd, cfg.basecmd)
 
-	#add input and isodeltas
-	modpara= (host, cfg.inputFlag, cfg.special_input, cfg.isoFlag)
-	def modfunc(cmd, host, inputFlag, special_input, isoFlag):
-		rc=euo.runcmd(cmd)
+	# add keys to input and output option
+	output=('-o', cfg.output, '/')
+	initial_input=None
+	if cfg.initial_input!=None:
+		initial_input=('-i', cfg.initial_input)
+
+	#add input function
+	modpara= (cfg.inputFlag, cfg.special_input)
+	def modfunc(cmd, inputFlag, special_input):
+		#print cmd, host, inputFlag, special_input, isoFlag
 		if inputFlag:
 			if special_input==None:
-				rc.add_input()
+				cmd=database.add_input(cmd,"temperature")
 			else:
-				rc.add_input(special_input)
-		elif special_input!=None:
-			rc.add_input(special_input)
-		if isoFlag:
-			rc.add_isodeltas()
-		cmd=rc.cmd
-		#if (host=='login'):
-		#	cmd += "; runsync.py %s.py" % cfg_name
-			
+				cmd=database.add_input(cmd,"temperature",path=special_input)
 		return cmd
-		
 
-	p=pararun.pararun(runcmd, cfg.para_list, cfg.output, runfunc=pararun.run_submit, modfunc=modfunc, modpara=modpara, input=cfg.initial_input, log=cfg.log, email='stollenwerk@th.physik.uni-bonn.de')
+	#add isodelta function
+	prerunpara= (cfg.isoFlag,)
+	def prerun_necessary_func(cmd, isoFlag):
+		if isoFlag:
+			return database.isodeltas_exist(cmd)
+		else
+			return False
+	def prerun_cmd_func(cmd, isoFlag):
+		if isoFlag:
+			return database.get_isodeltas(cmd)
+		else
+			return cmd
+	def prerun_add_func(cmd, isoFlag):
+		if isoFlag:
+			return database.add_isodeltas(cmd)
+		else
+			return cmd
+
+	p=pararun.pararun(runcmd, cfg.para_list, output, runfunc=pararun.run_submit, modfunc=modfunc, modpara=modpara, input=initial_input, log=cfg.log, email='stollenwerk@th.physik.uni-bonn.de')
 	if args.dry:
-		p=pararun.pararun(runcmd, cfg.para_list, cfg.output, runfunc=pararun.run_print, modfunc=modfunc, modpara=modpara, input=cfg.initial_input, log=cfg.log, email='stollenwerk@th.physik.uni-bonn.de')
+		p=pararun.pararun(runcmd, cfg.para_list, output, runfunc=pararun.run_print, modfunc=modfunc, modpara=modpara, input=initial_input, log=cfg.log, email='stollenwerk@th.physik.uni-bonn.de')
 	p.run()
 
 if __name__=="__main__":

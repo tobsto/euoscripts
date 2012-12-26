@@ -13,6 +13,7 @@ class physical_system:
 
 physical_systems=[]
 
+# common default parameter
 common_positive={}
 common_positive['Ed0']=0.0
 common_positive['gamma']=0.05
@@ -157,6 +158,7 @@ def get_option(cmd, keys, default=None):
 				return default
 			else:
 				print 'Error: Failed to extract value for option %s in run command: %s. No default was given. Break.' % (key, self.cmd)
+				exit(1)	
 
 ############################################
 # extract single value from parameter file
@@ -170,6 +172,7 @@ def extractParameter (filename, name):
 			value=l.split()[2]
 			return value
 	print "Error: parameter %s in file %s not found!" % (name, filename)
+	exit(1)
 	
 def parameterExists (filename, name):
 	parafile=open(filename, 'r')
@@ -199,7 +202,7 @@ class system_parameter:
 		self.output              =      (get_option(runcmd, ('-o','--output'),                   "output"))
 		self.input=None
 		if option_exists(runcmd, ('-i','--input')):
-			self.input       =      (get_option(runcmd, ('-o','--input')))
+			self.input       =      (get_option(runcmd, ('-i','--input')))
 		self.mirror              =    option_exists(runcmd, ('-s','--mirror'))
 		self.ncc_oxy             = float(get_option(runcmd, ('--ncc_oxy',),                        0.9864))
 		self.ncc_gad             = float(get_option(runcmd, ('--ncc_gad',),                        0.9952))
@@ -250,7 +253,11 @@ class system_parameter:
 		self.gamma              = float(extractParameter(parafilename, 'gamma'             ))
 		self.impurity           =      (extractParameter(parafilename, 'impurity'          ))
 		self.output             =      (extractParameter(parafilename, 'output'            ))
-		self.input              =      (extractParameter(parafilename, 'input'             ))
+		inputOption              =      (extractParameter(parafilename, 'input'             ))
+		if inputOption=='None':
+			self.input=None
+		else:
+			self.input=inputOption
 		self.mirror=False
 		if parameterExists(parafilename, 'mirror'):
 			self.mirror=True
@@ -329,12 +336,33 @@ class system_parameter:
 				return system
 		return None
 
+	def get_runcmd(self, name):
+		for system in self.physical_systems:
+			if (system.name==name):
+				runcmd='euo.out'
+				for (key, value) in system.positive.items():
+					if not key in common_positive:
+						if type(value)!=bool:
+							runcmd+=' --%s %s' % (key, value)
+						else:
+							runcmd+=' --%s' % key
+				return runcmd
+		# if system name is not found:
+		print "Error: System parameter class: Unknown system: %s. Break." % system
+		exit(1)
+			
 
 def main():
 	sp=system_parameter()
 	cmd="mpirun -np 4 euo.out -s -m 2 -n 5 --n_cr 1.0 --eta 1E-4"
 	sp.read_cmd(cmd)
 	sp.get_system()
+
+	print sp.get_runcmd('Metal')
+	print sp.get_runcmd('Heisenberg-Metal')
+	print sp.get_runcmd('EuGdO')
+
+	
 
 
 if __name__=="__main__":
