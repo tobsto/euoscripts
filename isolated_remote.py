@@ -10,6 +10,7 @@ def main():
 	parser = argparse.ArgumentParser(description='Update database for energy shifts in EuO and substrate on remote database')
 	parser.add_argument('input', nargs='+', help='Folders containing results of isolated material runs')
   	parser.add_argument('--dry', action='store_true', help='Simulate updating of database')
+  	parser.add_argument('--no_archive', action='store_true', help='Do not archive results')
 
 	args = parser.parse_args()
 
@@ -67,11 +68,14 @@ def main():
 			inputs.append("%s%s/%s%s/" % (path_prefix, version_part, path_suffix, name))
 	else:
 		inputs=args.input
-	cmd='/home/stollenw/Sonstiges/Programme/bin/isodelta_update.py'
+	cmd='/home/stollenw/Sonstiges/Programme/bin/isolated_update.py'
 	for inp in inputs:
 		cmd+=" %s" % inp
 	if args.dry:
 		cmd+=" --dry"	
+	if args.no_archive:
+		cmd+=" --no_archive"	
+
 
 	rcmd="ssh heisenberg.physik.uni-bonn.de '%s'" % cmd
 	#print rcmd

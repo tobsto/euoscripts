@@ -336,19 +336,45 @@ class system_parameter:
 				return system
 		return None
 
-	def get_runcmd(self, name):
+	# get run command for isolated systems
+	def get_runcmd_hetero(self, name, N, M, ni, ncr, dW, T):
 		for system in self.physical_systems:
 			if (system.name==name):
+				if system.constituents==(None,None):
+					print "Error: System parameter class: Not a heterostructure system: %s. Break." % name
+					exit(1)
 				runcmd='euo.out'
 				for (key, value) in system.positive.items():
 					if not key in common_positive:
 						if type(value)!=bool:
 							runcmd+=' --%s %s' % (key, value)
 						else:
-							runcmd+=' --%s' % key
+							if value==True:
+								runcmd+=' --%s' % key
+				runcmd+=' -n %i -m %i -x %e --n_cr %e --Delta_W %e -t %e' % (N, M, ni, ncr, dW, T) 
 				return runcmd
 		# if system name is not found:
-		print "Error: System parameter class: Unknown system: %s. Break." % system
+		print "Error: System parameter class: Unknown system: %s. Break." % name
+		exit(1)
+			
+	def get_runcmd_isolated(self, name, N, nc, T):
+		for system in self.physical_systems:
+			if (system.name==name):
+				if system.constituents!=(None,None):
+					print "Error: System parameter class: Not an isolated system: %s. Break." % name
+					exit(1)
+				runcmd='euo.out'
+				for (key, value) in system.positive.items():
+					if not key in common_positive:
+						if type(value)!=bool:
+							runcmd+=' --%s %s' % (key, value)
+						else:
+							if value==True:
+								runcmd+=' --%s' % key
+				runcmd+=' -n %i -x %e -t %e' % (N, nc, T) 
+				return runcmd
+		# if system name is not found:
+		print "Error: System parameter class: Unknown system: %s. Break." % name
 		exit(1)
 			
 
