@@ -47,10 +47,30 @@ def tostring(val):
 # Database for isolated Deltas
 ###############################################
 
+# mapping for remote worker clients
+class remote:
+	def __init__(self, host, serverdir, clientdir):
+		self.host=host
+		self.serverdir=serverdir
+		self.clientdir=clientdir
+remotes=[]
+
+remotes.append(remote(                'heisenberg',  '/home/stollenw/runs/', '/home/stollenw/runs/'))
+remotes.append(remote('agem.th.physik.uni-bonn.de',  '/home/stollenw/runs/', '/users/stollenw/runs/'))
+remotes.append(remote('bgem.th.physik.uni-bonn.de',  '/home/stollenw/runs/', '/users/stollenw/runs/'))
+remotes.append(remote(          'stgeorgenamreith',  '/home/stollenw/runs/', '/users/stollenw/runs/'))
+remotes.append(remote(             'pfaffenschlag',  '/home/stollenw/runs/', '/users/stollenw/runs/'))
+remotes.append(remote(                 'lunzamsee',  '/home/stollenw/runs/', '/users/stollenw/runs/'))
+remotes.append(remote(         'stleonhardamforst',  '/home/stollenw/runs/', '/users/stollenw/runs/'))
+remotes.append(remote(            'bischofstetten',  '/home/stollenw/runs/', '/users/stollenw/runs/'))
+remotes.append(remote(                     'login', '/home/stollenw/druns/', '/checkpoints/'))
+
+
 class isolated_database:
 	def __init__(self):
 		self.names=('material', 'N', 'nc', 'T', 'Delta', 'origin')
 		self.data=[]
+		self.remotes=remotes
 
 	def extractData (self, resultsFolder):
 		# get system parameter
@@ -180,6 +200,8 @@ class isolated_database:
 
 	def get_output(self, material, N, nc):
 			return "%s_N%03i_nc%06.4f/" % (material, N, nc)
+	def get_temp_output(self, t):
+			return "t%07.3f/" % t
 	# archive results
 	def archive(self, dest='/home/stollenw/projects/euo/results/isolated/'):
 		for d in self.data:
@@ -187,7 +209,7 @@ class isolated_database:
 			dest_path=dest + self.get_output(d[0], d[1], d[2])
 			if not os.path.exists(dest_path):
 				os.mkdir(dest_path)
-			dest_temp_path=dest_path + "output_t%07.3f/" % d[3]
+			dest_temp_path=dest_path + self.get_temp_output(d[3])
 			if not os.path.exists(dest_temp_path):
 				os.mkdir(dest_temp_path)
 			try:
@@ -213,8 +235,8 @@ class isolated_database:
 				dest_path  =dest   + self.get_output(d[0], d[1], d[2])
 				if not os.path.exists(dest_path):
 					os.mkdir(dest_path)
-				source_temp_path=source_path + "output_t%07.3f/" % d[3]
-				dest_temp_path  =dest_path   + "output_t%07.3f/" % d[3]
+				source_temp_path=source_path + self.get_temp_output(d[3])
+				dest_temp_path  =dest_path   + self.get_temp_output(d[3])
 				if not os.path.exists(dest_temp_path):
 					os.mkdir(dest_temp_path)
 				try:
@@ -250,6 +272,7 @@ class heterostructure_database:
 	def __init__(self):
 		self.names=('system', 'N', 'M', 'ni', 'ncr', 'dW' 'T', 'avmag', 'origin')
 		self.data=[]
+		self.remotes=remotes
 
 	def extractData (self, resultsFolder):
 		# get system parameter
@@ -378,6 +401,8 @@ class heterostructure_database:
 	def get_output(self, material, N, M, ni, ncr, dW):
 		return "%s_N%03i_M%03i_ni%06.4f_ncr%06.4f_dW%06.4/" % (material, N, M, ni, ncr, dW)
 
+	def get_temp_output(self, t):
+			return "t%07.3f/" % t
 	# archive results
 	def archive(self, dest='/home/stollenw/projects/euo/results/heterostructures/'):
 		for d in self.data:
@@ -385,7 +410,7 @@ class heterostructure_database:
 			dest_path=dest + self.get_output(d[0], d[1], d[2], d[3], d[4], d[5])
 			if not os.path.exists(dest_path):
 				os.mkdir(dest_path)
-			dest_temp_path=dest_path + "output_t%07.3f/" % d[6]
+			dest_temp_path=dest_path + self.get_temp_output(d[6])
 			if not os.path.exists(dest_temp_path):
 				os.mkdir(dest_temp_path)
 			cmd="rsync -avztq %s %s" % ("%s/parameter.cfg" % d[8], dest_temp_path)
@@ -395,7 +420,7 @@ class heterostructure_database:
 			cmd="rsync -avztq %s %s" % ("%s/results" % d[8], dest_temp_path)
 			subprocess.call(cmd, shell=True)
 			f=open("%s/origin.txt" % dest_temp_path, 'w')
-			f.write("%s\n" % d[5])
+			f.write("%s\n" % d[9])
 			f.close()
 
 	def download_results(self, material, N, M, ni, ncr, dW, T, dest, source='stollenw@heisenberg.physik.uni-bonn.de:/home/stollenw/projects/euo/results/isolated/'):
@@ -405,8 +430,8 @@ class heterostructure_database:
 				dest_path  =dest   + self.get_output(d[0], d[1], d[2], d[3], d[4], d[5])
 				if not os.path.exists(dest_path):
 					os.mkdir(dest_path)
-				source_temp_path=source_path + "output_t%07.3f/" % d[3]
-				dest_temp_path  =dest_path   + "output_t%07.3f/" % d[3]
+				source_temp_path=source_path + self.get_temp_output(d[6])
+				dest_temp_path  =dest_path   + self.get_temp_output(d[6])
 				if not os.path.exists(dest_temp_path):
 					os.mkdir(dest_temp_path)
 				try:
@@ -417,7 +442,7 @@ class heterostructure_database:
 					cmd="rsync -avztq %s %s" % ("%s/results" % source_temp_path, dest_temp_path)
 					subprocess.call(cmd, shell=True)
 					f=open("%s/origin.txt" % dest_temp_path, 'w')
-					f.write("%s\n" % d[5])
+					f.write("%s\n" % d[9])
 					f.close()
 
 				except:
@@ -519,7 +544,7 @@ def add_isodeltas(cmd, dbpath=None):
 ##############################################################################
 ##### Check if energy shifts of isolated materials for known heterostruture already exist
 ##############################################################################
-def isodeltas_exist(cmd, dbpath=None):
+def get_isodelta_info(cmd, dbpath=None):
 	# read database
 	db=isolated_database()
 	if dbpath==None:
@@ -542,12 +567,9 @@ def isodeltas_exist(cmd, dbpath=None):
 			# mirror symmetric system with N=3=5+1/2
 			if not sp.mirror:	
 				N_left=int(sp.N+1/2.0)
-			left_exists=db.exists(system.constituents[0], N_left, sp.concentration, sp.temparature)
-			right_exists=db.exists(system.constituents[1], N_right, sp.ncr, sp.temparature)
-			if left_exists and right_exists:
-				return True
-			else:
-				return False
+			left_exists=db.exists(system.constituents[0], N_left, sp.concentration, sp.temperature)
+			right_exists=db.exists(system.constituents[1], N_right, sp.ncr, sp.temperature)
+			return (left_exists, system.constituents[0], N_left, sp.concentration, right_exists, system.constituents[1], N_right, sp.ncr, sp.temperature)
 		else:
 			print "Error: Isodeltas exist: Isolated System: %s" % cmd
 			print "Break."
@@ -566,7 +588,7 @@ def isodeltas_exist(cmd, dbpath=None):
 # with input options is then returned.
 # if no suitable input was found the database will be search and copy of a suitable
 # input folder is downloaded from the archive
-def add_input (runcmd, path=None):
+def add_input (runcmd, download_path=None, path=None):
 	# get system parameter
 	sp=system_parameter()
 	sp.read_cmd(runcmd)
@@ -577,6 +599,9 @@ def add_input (runcmd, path=None):
 		# extract output folder from run command if path variable is not given
 		if path==None:
 			path=os.path.dirname(os.path.abspath(sp.output))
+		# local path where the download is stored
+		if download_path==None:
+			download_path=os.path.dirname(os.path.abspath(sp.output))
 		
 		inputOptions=''
 		# Search search 'resultsFolder' for sub folders containing results with
@@ -604,18 +629,18 @@ def add_input (runcmd, path=None):
 		if foundInput==False and sp.get_system!=None:
 			database=None
 			# isolated systems
-			if sp.constituents==(None,None):
+			if sp.get_system().constituents==(None,None):
 				database=isolated_database()
 				database.download()
 				# find a folder with lower temperature than T
 				tmax=0.0
-				for d in database.data:
+				for d in sorted(filter(lambda element : element[0] == sp.get_system().name and element[1] == sp.N and element[2] == sp.ni, database.data), key= lambda element: element[3]):
 					t=d[3]
 					if t>tmax and t<=T:
 						tmax=t
 
 				if tmax>0.0:
-					inputFolder=database.download_results(sp.get_system, sp.N, sp.concentration, tmax, path)
+					inputFolder=database.download_results(sp.get_system().name, sp.N, sp.concentration, tmax, download_path)
 					runcmd+=" -i " + inputFolder + "/"
 
 			# heterostructures
@@ -624,13 +649,13 @@ def add_input (runcmd, path=None):
 				database.download()
 				# find a folder with lower temperature than T
 				tmax=0.0
-				for d in database.data:
-					t=d[5]
+				for d in sorted(filter(lambda element : element[0] == sp.get_system().name and element[1] == sp.N and element[2] == sp.N0 and element[3] == sp.ni and element[4] == sp.n_cr and element[5] == sp.Delta_W, database.data), key= lambda element: element[3]):
+					t=d[6]
 					if t>tmax and t<=T:
 						tmax=t
 
 				if tmax>0.0:
-					inputFolder=database.download_results(sp.get_system, sp.N, sp.N0, sp.concentration, sp.n_cr, tmax, path)
+					inputFolder=database.download_results(sp.get_system().name, sp.N, sp.N0, sp.concentration, sp.n_cr, tmax, download_path)
 					runcmd+=" -i " + inputFolder + "/"
 
 	return runcmd

@@ -6,13 +6,14 @@ import os
 import sys
 
 class job:
-	def __init__(self, n, l, e, c, logappend=False, mailcmd='mailx -s'):
+	def __init__(self, n, l, e, c, logappend=False, verbose=True, proceed=True, mailcmd='mailx -s'):
 		self.name=n
 		self.log=l
 		self.email=e
 		self.cmd=c
 		self.mailcmd=mailcmd
 		self.logappend=logappend
+		self.verbose=verbose
 
 	def run(self):
 		# get hostname
@@ -52,7 +53,7 @@ class job:
 			end=time.time()
 
 			# check status and send email
-			if status and self.email!=None:
+			if status and self.verbose:
 				f=open("message.temp", 'w')
 				f.write("And error has occured during the run: %s.\n" % self.name)
 				f.write("Run command was: %s.\n" % runcmd)
@@ -68,7 +69,8 @@ class job:
 				#print cmd
 				subprocess.call(cmd, shell=True)
 				os.remove("message.temp")
-			elif status==False and self.email!=None:
+
+			elif status==False:
 				f=open("message.temp", 'w')
 				f.write("Successful run: %s.\n" % self.name)
 				f.write("Run command was: %s.\n" % runcmd)
@@ -80,6 +82,8 @@ class job:
 				#print cmd
 				subprocess.call(cmd, shell=True)
 				os.remove("message.temp")
+				if not proceed:
+					exit(1)	
 def main():
 	j=job('myjob', 'mylog', 'stollenwerk@th.physik.uni-bonn.de', ['sleep 1', 'sleep sdfjkl', 'sleep 2'], logappend=True)
 	j.run()

@@ -337,7 +337,7 @@ class system_parameter:
 		return None
 
 	# get run command for isolated systems
-	def get_runcmd_hetero(self, name, N, M, ni, ncr, dW, T):
+	def get_runcmd_hetero(self, name, N, M, ni, ncr, dW, T=None):
 		for system in self.physical_systems:
 			if (system.name==name):
 				if system.constituents==(None,None):
@@ -351,13 +351,16 @@ class system_parameter:
 						else:
 							if value==True:
 								runcmd+=' --%s' % key
-				runcmd+=' -n %i -m %i -x %e --n_cr %e --Delta_W %e -t %e' % (N, M, ni, ncr, dW, T) 
+				if T==None:
+					runcmd+=' -n %i -m %i -x %e --n_cr %e --Delta_W %e' % (N, M, ni, ncr, dW) 
+				else:
+					runcmd+=' -n %i -m %i -x %e --n_cr %e --Delta_W %e -t %e' % (N, M, ni, ncr, dW, T) 
 				return runcmd
 		# if system name is not found:
 		print "Error: System parameter class: Unknown system: %s. Break." % name
 		exit(1)
 			
-	def get_runcmd_isolated(self, name, N, nc, T):
+	def get_runcmd_isolated(self, name, N, nc, T=None):
 		for system in self.physical_systems:
 			if (system.name==name):
 				if system.constituents!=(None,None):
@@ -371,22 +374,28 @@ class system_parameter:
 						else:
 							if value==True:
 								runcmd+=' --%s' % key
-				runcmd+=' -n %i -x %e -t %e' % (N, nc, T) 
+				if T==None:
+					runcmd+=' -n %i -x %e' % (N, nc)
+				else:
+					runcmd+=' -n %i -x %e -t %e' % (N, nc, T)
 				return runcmd
 		# if system name is not found:
 		print "Error: System parameter class: Unknown system: %s. Break." % name
 		exit(1)
-			
+
+	def get_physical_system(self, name):
+		for system in self.physical_systems:
+			if (system.name==name):
+				return system
+		# if system name is not found:
+		print "Error: System parameter class: Unknown system: %s. Break." % name
+		exit(1)
 
 def main():
 	sp=system_parameter()
 	cmd="mpirun -np 4 euo.out -s -m 2 -n 5 --n_cr 1.0 --eta 1E-4"
 	sp.read_cmd(cmd)
 	sp.get_system()
-
-	print sp.get_runcmd('Metal')
-	print sp.get_runcmd('Heisenberg-Metal')
-	print sp.get_runcmd('EuGdO')
 
 	
 
