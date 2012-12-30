@@ -1,27 +1,55 @@
 #!/usr/bin/python
 
-import itertools as it
 import subprocess
 import sys
 import os
+
+import database
 import job
 import system_parameter
-import database
 
 def system_equal(sp1, sp2):
 	# conditions
 	conditions=[]
 	conditions.append(sp1.get_system().name==sp2.get_system().name)
 	conditions.append(sp1.N==sp2.N)
-	conditions.append(sp1.ni==sp2.ni)
+	conditions.append(sp1.concentration==sp2.concentration)
 	if sp1.get_system().constituents!=(None,None):
 		conditions.append(sp1.N0==sp2.N0)
-		conditions.append(sp1.ncr==sp2.ncr)
-		conditions.append(sp1.Delta_W==sp2.Delta_w)
+		conditions.append(sp1.n_cr==sp2.n_cr)
+		conditions.append(sp1.Delta_W==sp2.Delta_W)
 	return all(conditions)
 
+def database_exists(sp):
+	if sp.get_system().constituents==(None,None):
+		idb=database.isolated_database()
+		idb.download()
+		if idb.exists(sp.get_system().name, sp.N, sp.concentration, sp.temperature):
+			return True
+		else:
+			return False
+	else:
+		hdb=database.heterostructure_database()
+		hdb.download()
+		if hdb.exists(sp.get_system().name, sp.N, sp.N0, sp.concentration, sp.n_cr, sp.Delta_W, sp.temperature):
+			return True
+		else:
+			return False
+
+def get_worker():
+	host=database.get_host()
+	idb=database.isolated_database()
+	idb.download()
+	for worker in idb.workers:
+		if worker.host==host:
+			return worker
+	print "Error: get_worker: %s is an unknown working host. Break." % host
+	exit(1)
+	
 class euorun:
-	def __init__(self, material, N=5, M=None, ni=0.01, ncr=None, dW=None, output=None, input=None, initial_input=None, additional_parameter='', log='run', verbose=True, email='stollenwerk@th.physik.uni-bonn.de', mailcmd='mailx -s'):
+	def __init__(self, np, material, N=5, M=None, ni=0.01, ncr=None, dW=None, output=None, input=None, initial_input=None, additional_parameter='', log='run', verbose=True, email='stollenwerk@th.physik.uni-bonn.de', mailcmd='mailx -s'):
+		# number of nodes
+		self.np=np
 		# material name
 		self.material=material
 		# number of left layers
@@ -62,6 +90,8 @@ class euorun:
 		self.hdb=database.heterostructure_database()
 		self.hdb.download()
 
+		# get mpicmd
+		self.mpicmd=get_worker().mpicmd
 		# set top output folder to current working directory by default
 		if output==None:
 			if self.isolated:
@@ -108,18 +138,19 @@ class euorun:
 			results_exists=os.path.exists("%s/results" % output)
 			return system_equal(sp1, sp2) and results_exists
 		else:
-			return False
+			sp=system_parameter.system_parameter()
+			sp.read_cmd(runcmd)
+			return database_exists(sp)
 					
 	def run_isolated(self, t, special_input=None):
 		# run name
 		runname="%s, N=%i, ni=%f, T=%f" % (self.material, self.N, self.ni, t)
-		self.write_log("euorun: %s\n\n" % runname)
+		self.write_log("euorun: run: %s\n\n" % runname)
 		# run command
-		runcmd=self.sp.get_runcmd_isolated(self.material, self.N, self.ni, t)
+		runcmd=self.mpicmd + " -np %i " % self.np
+		runcmd+=self.sp.get_runcmd_isolated(self.material, self.N, self.ni, t)
 		# add additional parameter
 		runcmd+=self.additional_parameter
-		# add temperature
-		runcmd+=" -t %e" % t
 		# add output
 		runoutput=self.output + self.idb.get_temp_output(t)
 		runcmd+=" -o %s/" % runoutput
@@ -131,20 +162,25 @@ class euorun:
 			runcmd=database.add_input(runcmd, download_path=self.input+"/download/", path=self.input)
 
 		# run job
-		if not run_exists(runcmd, runoutput):
+		if not self.run_exists(runcmd, runoutput):
 			j=job.job(runname, self.log, self.email, [runcmd], logappend=True, verbose=self.verbose, mailcmd=self.mailcmd)
 			j.run()
+		# update database
+		updatecmd="isolated_remote.py --no_archive %s" % runoutput
+		subprocess.call(updatecmd, shell=True)
+		#j=job.job(runname, self.log, self.email, [updatecmd], logappend=True, verbose=self.verbose, mailcmd=self.mailcmd)
+		#j.run()
+
 
 	def run_hetero(self, t, special_input=None):
 		# run name
 		runname="%s, N=%i, M=%i, ni=%f, ncr=%f, dW=%f, T=%f" % (self.material, self.N, self.M, self.ni, self.ncr, self.dW, t)
-		self.write_log("euorun: %s\n\n" % runname)
+		self.write_log("euorun: run: %s\n\n" % runname)
 		# run command
-		runcmd=self.sp.get_runcmd_hetero(self.material, self.N, self.M, self.ni, self.ncr, self.dW, t)
+		runcmd=self.mpicmd + " -np %i " % self.np
+		runcmd+=self.sp.get_runcmd_hetero(self.material, self.N, self.M, self.ni, self.ncr, self.dW, t)
 		# add additional parameter
 		runcmd+=self.additional_parameter
-		# add temperature
-		runcmd+=" -t %e" % t
 		# add output
 		runoutput=self.output + self.hdb.get_temp_output(t)
 		runcmd+=" -o %s/" % runoutput
@@ -171,50 +207,61 @@ class euorun:
 				runname_left="%s, N=%i, ni=%f, T=%f" % (material_left, N_left, nc_left, t)
 				self.write_log("euorun: get isodeltas: %s\n\n" % runname_left)
 				# get run command
-				runcmd_left=self.sp.get_runcmd_isolated(material_left, N_left, nc_left, t)
+				runcmd_left=self.mpicmd + " -np %i " % self.np
+				runcmd_left+=self.sp.get_runcmd_isolated(material_left, N_left, nc_left, t)
 				# add output
 				output_left=self.idb.get_output(material_left, N_left, nc_left) + self.idb.get_temp_output(t)
 				runcmd_left+=" -o " + output_left
 				# add input if existent
 				runcmd_left=database.add_input(runcmd_left, download_path=output_left+"/download/", path=output_left)
 				# run left system
-				if not run_exists(runcmd_left, output_left):
-					j=job.job(runname_left, self.log, self.email, [runcmd_left], logappend=True, verbose=self.verbose, proceed=False, mailcmd=self.mailcmd)
+				if not self.run_exists(runcmd_left, output_left):
+					j=job.job(runname_left, self.log, self.email, [runcmd_left], logappend=True, verbose=self.verbose, mailcmd=self.mailcmd)
 					j.run()
 				# update database
-				updatecmd_left="isodelta_remote.py %s" % output_left
-				j=job.job("Update db: " + runname_left, self.log, self.email, [updatecmd_left], logappend=True, verbose=self.verbose, proceed=False, mailcmd=self.mailcmd)
-				j.run()
+				updatecmd_left="isolated_remote.py --no_archive  %s" % output_left
+				subprocess.call(updatecmd_left, shell=True)
+				#j=job.job(runname_left, self.log, self.email, [updatecmd_left], logappend=True, verbose=self.verbose, mailcmd=self.mailcmd)
+				#j.run()
 
 			if not exists_right:
 				# get name
 				runname_right="%s, N=%i, ni=%f, T=%f" % (material_right, N_right, nc_right, t)
 				self.write_log("euorun: get isodeltas: %s\n\n" % runname_right)
 				# get run command
-				runcmd_right=self.sp.get_runcmd_isolated(material_right, N_right, nc_right, t)
+				runcmd_right=self.mpicmd + " -np %i " % self.np
+				runcmd_right+=self.sp.get_runcmd_isolated(material_right, N_right, nc_right, t)
 				# add output
 				output_right=self.idb.get_output(material_right, N_right, nc_right)  + sefl.idb.get_temp_output(t)
 				runcmd_right+=" -o " + output_right
 				# add input if existent
 				runcmd_right=database.add_input(runcmd_right, download_path=output_right+"/download/", path=output_right)
 				# run right system
-				if not run_exists(runcmd_right, output_right):
+				if not self.run_exists(runcmd_right, output_right):
 					j=job.job(runname_right, self.log, self.email, [runcmd_right], logappend=True, verbose=self.verbose, mailcmd=self.mailcmd)
 					j.run()
 				# update database
-				updatecmd_right="isodelta_remote.py %s" % output_right
-				j=job.job("Update db: " + runname_right, self.log, self.email, [updatecmd_right], logappend=True, verbose=self.verbose, proceed=False, mailcmd=self.mailcmd)
-				j.run()
+				updatecmd_right="isolated_remote.py --no_archive  %s" % output_right
+				subprocess.call(updatecmd_right, shell=True)
+				#j=job.job(runname_right, self.log, self.email, [updatecmd_right], logappend=True, verbose=self.verbose, mailcmd=self.mailcmd)
+				#j.run()
 
 
 		# add isodeltas
 		runcmd=database.add_isodeltas(runcmd)
 		# run heterostructure job
-		if not run_exists(runcmd, runoutput):
+		if not self.run_exists(runcmd, runoutput):
 			j=job.job(runname, self.log, self.email, [runcmd], logappend=True, verbose=self.verbose, mailcmd=self.mailcmd)
 			j.run()
+		# update database
+		updatecmd="heterostructure_remote.py %s" % runoutput
+		subprocess.call(updatecmd, shell=True)
+		#j=job.job(runname, self.log, self.email, [updatecmd], logappend=True, verbose=self.verbose, mailcmd=self.mailcmd)
+		#j.run()
 
-	def run(self, t, special_input):
+
+
+	def run(self, t, special_input=None):
 		if self.isolated:
 			self.run_isolated(t, special_input)
 		else:
@@ -222,6 +269,7 @@ class euorun:
 
 	# temperature sweep
 	def tempsweep(self, temperatures):
+		self.log_prepare()
 
 		first=True
 		for t in temperatures: 
@@ -232,9 +280,9 @@ class euorun:
 			first=False
 
 		# send finishing notification
-		runname="%s, N=%i, M=%i, ni=%f, ncr=%f, dW=%f, T=" % (self.material, self.N, self.M, self.ni, self.ncr, self.dW)
-		if self.isolated:
-			runname="%s, N=%i, ni=%f, T=" % (self.material, self.N, self.ni)
+		runname="%s, N=%i, ni=%f, T=" % (self.material, self.N, self.ni)
+		if not self.isolated:
+			runname="%s, N=%i, M=%i, ni=%f, ncr=%f, dW=%f, T=" % (self.material, self.N, self.M, self.ni, self.ncr, self.dW)
 		for t in temperatures:
 			runname +=" %f," % t
 			
@@ -242,11 +290,8 @@ class euorun:
 		subprocess.call(cmd, shell=True)
 
 def main():
-	material='Metal'
-	N=2
-	ni=1.0
-	erun=euorun('Metal', N=2, ni=1.0)
-	erun.tempsweep((20,40,60))
+	erun=euorun(64, 'Metal', N=2, ni=0.5)
+	erun.tempsweep((21,22))
 
 if __name__=="__main__":
 	main()

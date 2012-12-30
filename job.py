@@ -6,7 +6,7 @@ import os
 import sys
 
 class job:
-	def __init__(self, n, l, e, c, logappend=False, verbose=True, proceed=True, mailcmd='mailx -s'):
+	def __init__(self, n, l, e, c, logappend=False, verbose=True, mailcmd='mailx -s'):
 		self.name=n
 		self.log=l
 		self.email=e
@@ -82,8 +82,6 @@ class job:
 				#print cmd
 				subprocess.call(cmd, shell=True)
 				os.remove("message.temp")
-				if not proceed:
-					exit(1)	
 def main():
 	j=job('myjob', 'mylog', 'stollenwerk@th.physik.uni-bonn.de', ['sleep 1', 'sleep sdfjkl', 'sleep 2'], logappend=True)
 	j.run()

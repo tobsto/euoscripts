@@ -2,7 +2,8 @@
 
 import subprocess
 
-programms=['euo.py', 'get_total_magnetisation.py','job.py', 'pararun.py','reflect.py','run.py','waitrun.py', 'isodelta_remote.py','isodelta_update.py', 'fetchdeb.py', 'isodelta_print.py', 'jobscheduler.py', 'submit.py', 'queue.py', 'system_parameter.py']
+programms=['runeuo.py','euorun.py', 'database.py', 'job.py', 'isolated_remote.py','isolated_update.py', 'isolated_print.py', 'system_parameter.py']
+#programms=['euorun.py', 'database.py', 'get_total_magnetisation.py','job.py', 'pararun.py','reflect.py','isolated_remote.py','isolated_update.py', 'fetchdeb.py', 'isolated_print.py', 'system_parameter.py']
 
 destinations=['/home/stollenw/Sonstiges/Programme/bin','/mnt/stollenw/sonstiges/local/python', '/mnt/dhome/programms/bin']
 for d in destinations:

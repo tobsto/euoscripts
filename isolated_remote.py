@@ -21,24 +21,23 @@ def main():
 	found=False
 	serverdir=''
 	clientdir=''
-	for remote in idb.remotes:
-		if host=remote.host:
-			serverdir=remote.serverdir	
-			clientdir=remote.clientdir	
+	for worker in idb.workers:
+		if host==worker.host:
+			serverdir=worker.serverdir	
+			clientdir=worker.clientdir	
 			found=True
 	if not found:	
-		print "Error: Isodelta remote: Unknow host: %s" % host
+		print "Error: Isolated database remote: Unknow host: %s" % host
 		print "Break."
 		exit(1)
 
 	# get path on heisenberg
 	inputs=[]
-	version_part=''
 	for ipath in args.input:
 		# get absolute path
 		apath=os.path.abspath(ipath)
 		if not apath.startswith(clientdir):
-			print "Error: Isodelta remote: %s is an unknown run path. Break." % apath
+			print "Error: Isolated database remote: %s is an unknown run path. Break." % apath
 			exit(1)
 		inputs.append(apath.replace(clientdir, serverdir, 1))
 
@@ -49,7 +48,6 @@ def main():
 		cmd+=" --dry"	
 	if args.no_archive:
 		cmd+=" --no_archive"	
-
 
 	rcmd="ssh heisenberg.physik.uni-bonn.de '%s'" % cmd
 	#print rcmd

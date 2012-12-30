@@ -48,29 +48,56 @@ def tostring(val):
 ###############################################
 
 # mapping for remote worker clients
-class remote:
-	def __init__(self, host, serverdir, clientdir):
+class worker:
+	def __init__(self, host, serverdir, clientdir, mpicmd):
 		self.host=host
 		self.serverdir=serverdir
 		self.clientdir=clientdir
-remotes=[]
+		self.mpicmd=mpicmd
+workers=[]
 
-remotes.append(remote(                'heisenberg',  '/home/stollenw/runs/', '/home/stollenw/runs/'))
-remotes.append(remote('agem.th.physik.uni-bonn.de',  '/home/stollenw/runs/', '/users/stollenw/runs/'))
-remotes.append(remote('bgem.th.physik.uni-bonn.de',  '/home/stollenw/runs/', '/users/stollenw/runs/'))
-remotes.append(remote(          'stgeorgenamreith',  '/home/stollenw/runs/', '/users/stollenw/runs/'))
-remotes.append(remote(             'pfaffenschlag',  '/home/stollenw/runs/', '/users/stollenw/runs/'))
-remotes.append(remote(                 'lunzamsee',  '/home/stollenw/runs/', '/users/stollenw/runs/'))
-remotes.append(remote(         'stleonhardamforst',  '/home/stollenw/runs/', '/users/stollenw/runs/'))
-remotes.append(remote(            'bischofstetten',  '/home/stollenw/runs/', '/users/stollenw/runs/'))
-remotes.append(remote(                     'login', '/home/stollenw/druns/', '/checkpoints/'))
+workers.append(worker(	'heisenberg', 
+	 		'/home/stollenw/runs/',
+			'/home/stollenw/runs/',
+			 'mpirun'))
+workers.append(worker(	'agem.th.physik.uni-bonn.de',
+			'/home/stollenw/runs/',
+			'/users/stollenw/runs/',
+			'mpirun'))
+workers.append(worker(	'bgem.th.physik.uni-bonn.de',
+			'/home/stollenw/runs/',
+			'/users/stollenw/runs/',
+			'mpirun'))
+workers.append(worker(	'stgeorgenamreith',
+			'/home/stollenw/runs/',
+			'/users/stollenw/runs/',
+			'mpirun --hostfile /users/stollenw/runs/hostfile'))
+workers.append(worker(	'pfaffenschlag',
+			'/home/stollenw/runs/',	
+			'/users/stollenw/runs/', 'mpirun --hostfile /users/stollenw/runs/hostfile_schlag'))
+workers.append(worker(	'lunzamsee',
+			'/home/stollenw/runs/',
+			'/users/stollenw/runs/',
+			'mpirun --hostfile /users/stollenw/runs/hostfile_lunz'))
+workers.append(worker(	'stleonhardamforst',	
+			'/home/stollenw/runs/',
+			'/users/stollenw/runs/',
+			'mpirun --hostfile /users/stollenw/runs/hostfile_leon'))
+workers.append(worker(	'bischofstetten',
+			'/home/stollenw/runs/',	
+			'/users/stollenw/runs/',
+			'mpirun --hostfile /users/stollenw/runs/hostfile_stetten'))
+workers.append(worker(	'login',
+			'/home/stollenw/druns/',
+			'/checkpoints/',
+			'mpirun.openmpi --mca btl ^udapl,openib --mca btl_tcp_if_include eth0 -x LD_LIBRARY_PATH --hostfile /users/stollenw/hostfile'))
 
 
 class isolated_database:
 	def __init__(self):
 		self.names=('material', 'N', 'nc', 'T', 'Delta', 'origin')
 		self.data=[]
-		self.remotes=remotes
+		self.workers=workers
 
 	def extractData (self, resultsFolder):
 		# get system parameter
@@ -182,19 +209,27 @@ class isolated_database:
 		exit(1)
 	
 	# fill database by extracting results form a special folder
-	def fill(self, topResultsFolders, overwrite=True):
+	def fill(self, topResultsFolders, overwrite=False):
 		if overwrite:
 			self.data=[]
 		for topfolder in topResultsFolders:
-			print topfolder
-			for d in os.listdir(topfolder):
-				folder=os.path.join(topfolder, d)
-				if os.path.isdir(folder) and isResults(folder):
-					(material, N, nc, T, Delta, path)=self.extractData(folder)
-					if not self.exists(material, N, nc, T):
-						print "Adding dataset: %s, N=%03i, nc=%06.4f, T=%05.1f, Delta=%01.9f, Source=%s" %(material, N, nc, T, Delta, path)
-						self.data.append((material, N, nc, T, Delta, path))
+			# if top folder contains results
+			if os.path.isdir(topfolder) and isResults(topfolder):
+				(material, N, nc, T, Delta, path)=self.extractData(topfolder)
+				if not self.exists(material, N, nc, T):
+					print "Adding dataset: %s, N=%03i, nc=%06.4f, T=%05.1f, Delta=%01.9f, Source=%s" %(material, N, nc, T, Delta, path)
+					self.data.append((material, N, nc, T, Delta, path))
 
+			# if not search sub folder for results
+			else:
+				for d in os.listdir(topfolder):
+					folder=os.path.join(topfolder, d)
+					if os.path.isdir(folder) and isResults(folder):
+						(material, N, nc, T, Delta, path)=self.extractData(folder)
+						if not self.exists(material, N, nc, T):
+							print "Adding dataset: %s, N=%03i, nc=%06.4f, T=%05.1f, Delta=%01.9f, Source=%s" %(material, N, nc, T, Delta, path)
+							self.data.append((material, N, nc, T, Delta, path))
+	
 		# sort by 1st column i.e. N 
 		self.data=sorted(self.data, key = lambda element : element[0])
 
@@ -272,7 +307,7 @@ class heterostructure_database:
 	def __init__(self):
 		self.names=('system', 'N', 'M', 'ni', 'ncr', 'dW' 'T', 'avmag', 'origin')
 		self.data=[]
-		self.remotes=remotes
+		self.workers=workers
 
 	def extractData (self, resultsFolder):
 		# get system parameter
@@ -383,23 +418,32 @@ class heterostructure_database:
 		exit(1)
 	
 	# fill database by extracting results form a special folder
-	def fill(self, topResultsFolders, overwrite=True):
+	def fill(self, topResultsFolders, overwrite=False):
 		if overwrite:
 			self.data=[]
 		for topfolder in topResultsFolders:
-			for d in os.listdir(topfolder):
-				folder=os.path.join(topfolder, d)
-				if os.path.isdir(folder) and isResults(folder):
-					(material, N_l, N_r, nc_l, nc_r, DeltaW, T, avmag, path)=self.extractData(folder)
-					if not self.exists(material, N, nc, T):
-						print "Adding dataset: %s, N_l=%03i, N_r=%03i, nc_l=%06.4f, nc_r=%06.4f, dW=%06.4f, T=%05.1f, AvMag=%06.4f, Source=%s" %(material, N_l, N_r, nc_l, nc_r, DeltaW, T, avmag, path)
-						self.data.append((material, N_l, N_r, nc_l, nc_r, DeltaW, T, avmag, path))
+			# if top folder contains results
+			# if not search sub folder for results
+			if os.path.isdir(topfolder) and isResults(topfolder):
+				(material, N_l, N_r, nc_l, nc_r, DeltaW, T, avmag, path)=self.extractData(topfolder)
+				if not self.exists(material, N, nc, T):
+					print "Adding dataset: %s, N_l=%03i, N_r=%03i, nc_l=%06.4f, nc_r=%06.4f, dW=%06.4f, T=%05.1f, AvMag=%06.4f, Source=%s" %(material, N_l, N_r, nc_l, nc_r, DeltaW, T, avmag, path)
+					self.data.append((material, N_l, N_r, nc_l, nc_r, DeltaW, T, avmag, path))
 
+			else:
+				for d in os.listdir(topfolder):
+					folder=os.path.join(topfolder, d)
+					if os.path.isdir(folder) and isResults(folder):
+						(material, N_l, N_r, nc_l, nc_r, DeltaW, T, avmag, path)=self.extractData(folder)
+						if not self.exists(material, N, nc, T):
+							print "Adding dataset: %s, N_l=%03i, N_r=%03i, nc_l=%06.4f, nc_r=%06.4f, dW=%06.4f, T=%05.1f, AvMag=%06.4f, Source=%s" %(material, N_l, N_r, nc_l, nc_r, DeltaW, T, avmag, path)
+							self.data.append((material, N_l, N_r, nc_l, nc_r, DeltaW, T, avmag, path))
+	
 		# sort by 2nd column i.e. N 
 		self.data=sorted(self.data, key = lambda element : element[1])
 
 	def get_output(self, material, N, M, ni, ncr, dW):
-		return "%s_N%03i_M%03i_ni%06.4f_ncr%06.4f_dW%06.4/" % (material, N, M, ni, ncr, dW)
+		return "%s_N%03i_M%03i_ni%06.4f_ncr%06.4f_dW%06.4f/" % (material, N, M, ni, ncr, dW)
 
 	def get_temp_output(self, t):
 			return "t%07.3f/" % t
@@ -489,8 +533,8 @@ def get_isodeltas(cmd, dbpath=None):
 			# mirror symmetric system with N=3=5+1/2
 			if not sp.mirror:	
 				N_left=int(sp.N+1/2.0)
-			left_exists=db.exists(system.constituents[0], N_left, sp.concentration, sp.temparature)
-			right_exists=db.exists(system.constituents[1], N_right, sp.ncr, sp.temparature)
+			left_exists=db.exists(system.constituents[0], N_left, sp.concentration, sp.temperature)
+			right_exists=db.exists(system.constituents[1], N_right, sp.n_cr, sp.temperature)
 			isolated_cmd=''
 			if not left_exists:
 				isolated_cmd+=sp.get_runcmd(system.constituents[0]) + "; "
@@ -531,9 +575,9 @@ def add_isodeltas(cmd, dbpath=None):
 			# mirror symmetric system with N=3=5+1/2
 			if not sp.mirror:	
 				N_left=int(sp.N+1/2.0)
-			Delta_l=db.getSpecialValue('Delta', system.constituents[0], N_left, sp.concentration, sp.temparature)
+			Delta_l=db.getDelta(system.constituents[0], N_left, sp.concentration, sp.temperature)
 			cmd+=" --Delta_l0 %0.15e" % Delta_l
-			Delta_r=db.getSpecialValue('Delta', system.constituents[1], N_right, sp.ncr, sp.temparature)
+			Delta_r=db.getDelta(system.constituents[1], N_right, sp.n_cr, sp.temperature)
 			cmd+=" --Delta_r0 %0.15e" % Delta_r
 
 			return cmd
@@ -568,8 +612,8 @@ def get_isodelta_info(cmd, dbpath=None):
 			if not sp.mirror:	
 				N_left=int(sp.N+1/2.0)
 			left_exists=db.exists(system.constituents[0], N_left, sp.concentration, sp.temperature)
-			right_exists=db.exists(system.constituents[1], N_right, sp.ncr, sp.temperature)
-			return (left_exists, system.constituents[0], N_left, sp.concentration, right_exists, system.constituents[1], N_right, sp.ncr, sp.temperature)
+			right_exists=db.exists(system.constituents[1], N_right, sp.n_cr, sp.temperature)
+			return (left_exists, system.constituents[0], N_left, sp.concentration, right_exists, system.constituents[1], N_right, sp.n_cr, sp.temperature)
 		else:
 			print "Error: Isodeltas exist: Isolated System: %s" % cmd
 			print "Break."
@@ -612,7 +656,7 @@ def add_input (runcmd, download_path=None, path=None):
 			for d in os.listdir(path):
 				folder=os.path.join(path, d)
 				if os.path.isdir(folder) and isResults(folder):
-					resultFolders.append((folder, float(extractParameter("%s/parameter.cfg" % folder, parameter))))
+					resultFolders.append((folder, float(extractParameter("%s/parameter.cfg" % folder, 'temperature'))))
 	
 			# find a folder with lower temperature than T
 			tmax=0.0
@@ -669,6 +713,9 @@ def main():
 	print sp.get_runcmd_isolated('Metal', N=5, nc=1.0, T=100.1)
 	print idb.get_output('Metal', N=5, nc=1.0)
 	print sp.get_runcmd_hetero('EuGdO-Metal-Heterostructure-eta1e-4', N=5, M=9, ni=0.01, ncr=1.0, dW=0.125, T=100.1)
+	
+	for worker in idb.workers:
+		print worker.host, worker.mpicmd
 	
 if __name__=="__main__":
 	main()

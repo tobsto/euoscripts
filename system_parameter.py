@@ -264,7 +264,7 @@ class system_parameter:
 
 		self.ncc_oxy            = float(extractParameter(parafilename, 'ncc_oxy'           ))
 		self.ncc_gad            = float(extractParameter(parafilename, 'ncc_gad'           ))
-		self.ncr                = float(extractParameter(parafilename, 'n_cr'              ))
+		self.n_cr                = float(extractParameter(parafilename, 'n_cr'              ))
 		self.Delta_g            = float(extractParameter(parafilename, 'Delta_g'           ))
 		self.J4f                = float(extractParameter(parafilename, 'J4f'               ))
 		self.Jcf                = float(extractParameter(parafilename, 'Jcf'               ))
