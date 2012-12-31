@@ -2,8 +2,7 @@
 
 import subprocess
 
-programms=['runeuo.py','euorun.py', 'database.py', 'job.py', 'isolated_remote.py','isolated_update.py', 'isolated_print.py', 'system_parameter.py']
-#programms=['euorun.py', 'database.py', 'get_total_magnetisation.py','job.py', 'pararun.py','reflect.py','isolated_remote.py','isolated_update.py', 'fetchdeb.py', 'isolated_print.py', 'system_parameter.py']
+programms=['job.py', 'system_parameter.py', 'database.py', 'euorun.py', 'runeuo.py', 'heterostructure_remote.py','heterostructure_update.py', 'heterostructure_print.py', 'heterostructure_remote.py','heterostructure_update.py', 'heterostructure_print.py']
 
 destinations=['/home/stollenw/Sonstiges/Programme/bin','/mnt/stollenw/sonstiges/local/python', '/mnt/dhome/programms/bin']
 for d in destinations:

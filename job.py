@@ -34,9 +34,9 @@ class job:
 		for runcmd in self.cmd:
 			# append logs to logfiles
 			fstdout = open(logfile, 'a')
-			fstdout.write("run: " + runcmd + "\n")
+			fstdout.write("job: " + runcmd + "\n")
 			fstderr = open(error_logfile, 'a')
-			fstderr.write("run: " + runcmd + "\n")
+			fstderr.write("job: " + runcmd + "\n")
 
 			# start time
 			stime=time.asctime()
@@ -55,7 +55,7 @@ class job:
 			# check status and send email
 			if status and self.verbose:
 				f=open("message.temp", 'w')
-				f.write("And error has occured during the run: %s.\n" % self.name)
+				f.write("And error has occured during the job: %s.\n" % self.name)
 				f.write("Run command was: %s.\n" % runcmd)
 				f.write("Run started at: %s.\n" % stime)
 				f.write("Duration: %s.\n" % time.strftime('%H:%M:%S', time.gmtime(end-start)))
@@ -72,7 +72,7 @@ class job:
 
 			elif status==False:
 				f=open("message.temp", 'w')
-				f.write("Successful run: %s.\n" % self.name)
+				f.write("Successful job: %s.\n" % self.name)
 				f.write("Run command was: %s.\n" % runcmd)
 				f.write("Run started at: %s.\n" % stime)
 				f.write("Duration: %s.\n" % time.strftime('%H:%M:%S', time.gmtime(end-start)))

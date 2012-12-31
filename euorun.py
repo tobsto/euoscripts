@@ -47,7 +47,7 @@ def get_worker():
 	exit(1)
 	
 class euorun:
-	def __init__(self, np, material, N=5, M=None, ni=0.01, ncr=None, dW=None, output=None, input=None, initial_input=None, additional_parameter='', log='run', verbose=True, email='stollenwerk@th.physik.uni-bonn.de', mailcmd='mailx -s'):
+	def __init__(self, np, material, N=5, M=None, ni=0.01, ncr=None, dW=None, output=None, input=None, initial_input=None, iteration_parameter=None, get_default_iteration_parameter=None, log='run', verbose=True, email='stollenwerk@th.physik.uni-bonn.de', mailcmd='mailx -s'):
 		# number of nodes
 		self.np=np
 		# material name
@@ -65,7 +65,18 @@ class euorun:
 		# initial input folder
 		self.initial_input=initial_input
 		# additional parameter (like max2, wr1, etc.)
-		self.additional_parameter=additional_parameter
+		# user defined parameter (if not defined add nothing)
+		if iteration_parameter!=None:
+			self.iteration_parameter=iteration_parameter
+		else:
+			self.iteration_parameter=''
+
+		# function which gives the default iteration parameter depending on the material 
+		# (only relevant for automatic isodelta runs)
+		if get_default_iteration_parameter!=None:
+			self.get_default_iteration_parameter=get_default_iteration_parameter
+		else:
+			self.get_default_iteration_parameter=database.get_iteration_parameter
 		# isolated flag
 		self.isolated=False
 		if M==None or ncr==None or dW==None:
@@ -145,12 +156,14 @@ class euorun:
 	def run_isolated(self, t, special_input=None):
 		# run name
 		runname="%s, N=%i, ni=%f, T=%f" % (self.material, self.N, self.ni, t)
-		self.write_log("euorun: run: %s\n\n" % runname)
+		self.write_log("##############################################\n")
+		self.write_log("### euorun: %s\n" % runname)
+		self.write_log("##############################################\n")
 		# run command
 		runcmd=self.mpicmd + " -np %i " % self.np
 		runcmd+=self.sp.get_runcmd_isolated(self.material, self.N, self.ni, t)
 		# add additional parameter
-		runcmd+=self.additional_parameter
+		runcmd+=self.iteration_parameter
 		# add output
 		runoutput=self.output + self.idb.get_temp_output(t)
 		runcmd+=" -o %s/" % runoutput
@@ -159,28 +172,32 @@ class euorun:
 			runcmd+=" -i %s" % (special_input)
 		# search self.input folder for suitable input folders and add it
 		else:
-			runcmd=database.add_input(runcmd, download_path=self.input+"/download/", path=self.input)
+			runcmd=database.add_input(runcmd, download_path=self.output+"/download/", path=self.output)
 
 		# run job
 		if not self.run_exists(runcmd, runoutput):
 			j=job.job(runname, self.log, self.email, [runcmd], logappend=True, verbose=self.verbose, mailcmd=self.mailcmd)
 			j.run()
 		# update database
+		self.write_log("* Update isolated database\n")
 		updatecmd="isolated_remote.py --no_archive %s" % runoutput
-		subprocess.call(updatecmd, shell=True)
-		#j=job.job(runname, self.log, self.email, [updatecmd], logappend=True, verbose=self.verbose, mailcmd=self.mailcmd)
-		#j.run()
+		#subprocess.call(updatecmd, shell=True)
+		j=job.job(runname, self.log, self.email, [updatecmd], logappend=True, verbose=self.verbose, mailcmd=self.mailcmd)
+		j.run()
+		self.write_log("\n")
 
 
 	def run_hetero(self, t, special_input=None):
 		# run name
 		runname="%s, N=%i, M=%i, ni=%f, ncr=%f, dW=%f, T=%f" % (self.material, self.N, self.M, self.ni, self.ncr, self.dW, t)
-		self.write_log("euorun: run: %s\n\n" % runname)
+		self.write_log("##############################################\n")
+		self.write_log("### euorun: %s\n" % runname)
+		self.write_log("##############################################\n")
 		# run command
 		runcmd=self.mpicmd + " -np %i " % self.np
 		runcmd+=self.sp.get_runcmd_hetero(self.material, self.N, self.M, self.ni, self.ncr, self.dW, t)
 		# add additional parameter
-		runcmd+=self.additional_parameter
+		runcmd+=self.iteration_parameter
 		# add output
 		runoutput=self.output + self.hdb.get_temp_output(t)
 		runcmd+=" -o %s/" % runoutput
@@ -189,77 +206,93 @@ class euorun:
 			runcmd+=" -i %s" % (special_input)
 		# search self.input folder for suitable input folders and add it
 		else:
-			runcmd=database.add_input(runcmd, download_path=self.output+"/download/", path=self.input)
+			runcmd=database.add_input(runcmd, download_path=self.output+"/download/", path=self.output)
 
-		######################################################################################
-		####### add energy shift values for the isolated system constituents #################
-		######################################################################################
-		# check is values of energy shifts in the isolated system already exist
-		(exists_left, material_left, N_left, nc_left, exists_right, material_right, N_right, nc_right, temp)=database.get_isodelta_info(runcmd)
-		if t!=temp:
-			print "Error: run_hetero: Temperatures do not match. This should not happen. Break." 
-			exit(1)
-
-		# if not start isolated runs
-		if not exists_left or not exists_right:
-			if not exists_left:
-				# get name
-				runname_left="%s, N=%i, ni=%f, T=%f" % (material_left, N_left, nc_left, t)
-				self.write_log("euorun: get isodeltas: %s\n\n" % runname_left)
-				# get run command
-				runcmd_left=self.mpicmd + " -np %i " % self.np
-				runcmd_left+=self.sp.get_runcmd_isolated(material_left, N_left, nc_left, t)
-				# add output
-				output_left=self.idb.get_output(material_left, N_left, nc_left) + self.idb.get_temp_output(t)
-				runcmd_left+=" -o " + output_left
-				# add input if existent
-				runcmd_left=database.add_input(runcmd_left, download_path=output_left+"/download/", path=output_left)
-				# run left system
-				if not self.run_exists(runcmd_left, output_left):
-					j=job.job(runname_left, self.log, self.email, [runcmd_left], logappend=True, verbose=self.verbose, mailcmd=self.mailcmd)
-					j.run()
-				# update database
-				updatecmd_left="isolated_remote.py --no_archive  %s" % output_left
-				subprocess.call(updatecmd_left, shell=True)
-				#j=job.job(runname_left, self.log, self.email, [updatecmd_left], logappend=True, verbose=self.verbose, mailcmd=self.mailcmd)
-				#j.run()
-
-			if not exists_right:
-				# get name
-				runname_right="%s, N=%i, ni=%f, T=%f" % (material_right, N_right, nc_right, t)
-				self.write_log("euorun: get isodeltas: %s\n\n" % runname_right)
-				# get run command
-				runcmd_right=self.mpicmd + " -np %i " % self.np
-				runcmd_right+=self.sp.get_runcmd_isolated(material_right, N_right, nc_right, t)
-				# add output
-				output_right=self.idb.get_output(material_right, N_right, nc_right)  + sefl.idb.get_temp_output(t)
-				runcmd_right+=" -o " + output_right
-				# add input if existent
-				runcmd_right=database.add_input(runcmd_right, download_path=output_right+"/download/", path=output_right)
-				# run right system
-				if not self.run_exists(runcmd_right, output_right):
-					j=job.job(runname_right, self.log, self.email, [runcmd_right], logappend=True, verbose=self.verbose, mailcmd=self.mailcmd)
-					j.run()
-				# update database
-				updatecmd_right="isolated_remote.py --no_archive  %s" % output_right
-				subprocess.call(updatecmd_right, shell=True)
-				#j=job.job(runname_right, self.log, self.email, [updatecmd_right], logappend=True, verbose=self.verbose, mailcmd=self.mailcmd)
-				#j.run()
-
-
-		# add isodeltas
-		runcmd=database.add_isodeltas(runcmd)
-		# run heterostructure job
+		#print "check", runcmd
+		# check if run not already exist 
 		if not self.run_exists(runcmd, runoutput):
+			######################################################################################
+			####### add energy shift values for the isolated system constituents #################
+			######################################################################################
+			# check is values of energy shifts in the isolated system already exist
+			#print "check isodeltas:",  database.get_isodelta_info(runcmd)
+			self.write_log("* Check isolated deltas: %s, %s, %s, %s, %s, %s, %s, %s\n"  % (database.get_isodelta_info(runcmd)[:-1]))
+			(exists_left, material_left, N_left, nc_left, exists_right, material_right, N_right, nc_right, temp)=database.get_isodelta_info(runcmd)
+			if t!=temp:
+				print "Error: run_hetero: Temperatures do not match. This should not happen. Break." 
+				exit(1)
+	
+			# if not start isolated runs
+			if not exists_left or not exists_right:
+				if not exists_left:
+					# get name
+					runname_left="%s, N=%i, ni=%f, T=%f" % (material_left, N_left, nc_left, t)
+					self.write_log("* Isolated run necessary: %s\n\n" % runname_left)
+					# get run command
+					runcmd_left=self.mpicmd + " -np %i " % self.np
+					runcmd_left+=self.sp.get_runcmd_isolated(material_left, N_left, nc_left, t)
+					# add default additional parameter for iteration 
+					runcmd_left+=self.get_default_iteration_parameter(material_left)
+					# add output
+					output_left=self.idb.get_output(material_left, N_left, nc_left)
+					runoutput_left=output_left + self.idb.get_temp_output(t)
+					runcmd_left+=" -o " + runoutput_left
+					# add input if existent
+					runcmd_left=database.add_input(runcmd_left, download_path=output_left+"/download/", path=output_left)
+					# run left system
+					if not self.run_exists(runcmd_left, runoutput_left):
+						j=job.job(runname_left, self.log, self.email, [runcmd_left], logappend=True, verbose=self.verbose, mailcmd=self.mailcmd)
+						j.run()
+					# update database
+					self.write_log("* Update isolated database\n")
+					#print "update isolated db"
+					updatecmd_left="isolated_remote.py --no_archive  %s" % output_left
+					#subprocess.call(updatecmd_left, shell=True)
+					j=job.job(runname_left, self.log, self.email, [updatecmd_left], logappend=True, verbose=self.verbose, mailcmd=self.mailcmd)
+					j.run()
+	
+				if not exists_right:
+					# get name
+					runname_right="%s, N=%i, ni=%f, T=%f" % (material_right, N_right, nc_right, t)
+					self.write_log("* Isolated run necessary: %s\n\n" % runname_left)
+					# get run command
+					runcmd_right=self.mpicmd + " -np %i " % self.np
+					runcmd_right+=self.sp.get_runcmd_isolated(material_right, N_right, nc_right, t)
+					# add default additional parameter for iteration 
+					runcmd_right+=self.get_default_iteration_parameter(material_right)
+					# add output
+					output_right=self.idb.get_output(material_right, N_right, nc_right)
+					runoutput_right=output_right + self.idb.get_temp_output(t)
+					runcmd_right+=" -o " + runoutput_right
+					# add input if existent
+					runcmd_right=database.add_input(runcmd_right, download_path=output_right+"/download/", path=output_right)
+					# run right system
+					if not self.run_exists(runcmd_right, runoutput_right):
+						j=job.job(runname_right, self.log, self.email, [runcmd_right], logappend=True, verbose=self.verbose, mailcmd=self.mailcmd)
+						j.run()
+					# update database
+					#print "update isolated db"
+					self.write_log("* Update isolated database\n")
+					updatecmd_right="isolated_remote.py --no_archive  %s" % output_right
+					#subprocess.call(updatecmd_right, shell=True)
+					j=job.job(runname_right, self.log, self.email, [updatecmd_right], logappend=True, verbose=self.verbose, mailcmd=self.mailcmd)
+					j.run()
+	
+	
+			# add isodeltas
+			runcmd=database.add_isodeltas(runcmd)
+			# run heterostructure job
+			#print "run", runcmd
 			j=job.job(runname, self.log, self.email, [runcmd], logappend=True, verbose=self.verbose, mailcmd=self.mailcmd)
 			j.run()
-		# update database
-		updatecmd="heterostructure_remote.py %s" % runoutput
-		subprocess.call(updatecmd, shell=True)
-		#j=job.job(runname, self.log, self.email, [updatecmd], logappend=True, verbose=self.verbose, mailcmd=self.mailcmd)
-		#j.run()
-
-
+			# update database
+			self.write_log("* Update heterostructure database\n")
+			#print "update heterostructure db"
+			updatecmd="heterostructure_remote.py %s" % runoutput
+			#subprocess.call(updatecmd, shell=True)
+			j=job.job(runname, self.log, self.email, [updatecmd], logappend=True, verbose=self.verbose, mailcmd=self.mailcmd)
+			j.run()
+		self.write_log("\n")
 
 	def run(self, t, special_input=None):
 		if self.isolated:

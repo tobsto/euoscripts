@@ -22,6 +22,12 @@ def extractResultValue (filename):
 	f.close()
 	return l
 
+def extractResultValue2ndColumn (filename):
+	f=open(filename, 'r')
+	l=f.readline().split()[1]
+	f.close()
+	return l
+
 def isResults (resultsFolder):
 	parafilename="%s/parameter.cfg" % resultsFolder
 	mufilename="%s/results/mu.dat" % resultsFolder
@@ -92,6 +98,23 @@ workers.append(worker(	'login',
 			'/checkpoints/',
 			'mpirun.openmpi --mca btl ^udapl,openib --mca btl_tcp_if_include eth0 -x LD_LIBRARY_PATH --hostfile /users/stollenw/hostfile'))
 
+# default iteration parameter for the different types of systems
+def get_iteration_parameter(system_name):
+	if system_name=='Metal':
+		return ''
+	elif system_name=='Heisenberg-Metal':
+		return ''
+	elif system_name=='EuGdO':
+		return ' --max2 5'
+	elif system_name=='EuGdO-Metal-Heterostructure-eta1e-4':
+		return ' --max2 5 --wru 0.01'
+	elif system_name=='HeisenbergMetal-Metal-Heterostructure':
+		return ''
+	elif system_name=='Metal-Metal-Heterostructure':
+		return ''
+	else:
+		print "Error: get iteration parameter. Unknow system name: %s. Break." % system_name
+		exit(1)
 
 class isolated_database:
 	def __init__(self):
@@ -239,6 +262,8 @@ class isolated_database:
 			return "t%07.3f/" % t
 	# archive results
 	def archive(self, dest='/home/stollenw/projects/euo/results/isolated/'):
+		if not os.path.exists(dest):
+			os.makedirs(dest)
 		for d in self.data:
 			print "archive", d 
 			dest_path=dest + self.get_output(d[0], d[1], d[2])
@@ -269,7 +294,7 @@ class isolated_database:
 				source_path=source + self.get_output(d[0], d[1], d[2])
 				dest_path  =dest   + self.get_output(d[0], d[1], d[2])
 				if not os.path.exists(dest_path):
-					os.mkdir(dest_path)
+					os.makedirs(dest_path)
 				source_temp_path=source_path + self.get_temp_output(d[3])
 				dest_temp_path  =dest_path   + self.get_temp_output(d[3])
 				if not os.path.exists(dest_temp_path):
@@ -318,14 +343,14 @@ class heterostructure_database:
 		if (system==None):
 			print "ExtractValues: Unable to find matching system type. Break."
 			exit(1)
-		if (system.constituens==(None,None)):
+		if (system.constituents==(None,None)):
 			print "ExtractValues: System in %s is not a heterostructure. Break." % resultsFolder
 			exit(1)
 	
 		# get values
 		avmagfilename="%s/results/avmag.dat" % resultsFolder
-		avmag=float(extractResultValue(mufilename))
-		return (system.name, sp.N, sp.concentration, sp.temperature, avmag, os.path.abspath(resultsFolder))
+		avmag=float(extractResultValue2ndColumn(avmagfilename))
+		return (system.name, sp.N, sp.N0, sp.concentration, sp.n_cr, sp.Delta_W, sp.temperature, avmag, os.path.abspath(resultsFolder))
 
 
 	# write database to file
@@ -426,7 +451,7 @@ class heterostructure_database:
 			# if not search sub folder for results
 			if os.path.isdir(topfolder) and isResults(topfolder):
 				(material, N_l, N_r, nc_l, nc_r, DeltaW, T, avmag, path)=self.extractData(topfolder)
-				if not self.exists(material, N, nc, T):
+				if not self.exists(material, N_l, N_r, nc_l, nc_r, DeltaW, T):
 					print "Adding dataset: %s, N_l=%03i, N_r=%03i, nc_l=%06.4f, nc_r=%06.4f, dW=%06.4f, T=%05.1f, AvMag=%06.4f, Source=%s" %(material, N_l, N_r, nc_l, nc_r, DeltaW, T, avmag, path)
 					self.data.append((material, N_l, N_r, nc_l, nc_r, DeltaW, T, avmag, path))
 
@@ -435,7 +460,7 @@ class heterostructure_database:
 					folder=os.path.join(topfolder, d)
 					if os.path.isdir(folder) and isResults(folder):
 						(material, N_l, N_r, nc_l, nc_r, DeltaW, T, avmag, path)=self.extractData(folder)
-						if not self.exists(material, N, nc, T):
+						if not self.exists(material, N_l, N_r, nc_l, nc_r, DeltaW, T):
 							print "Adding dataset: %s, N_l=%03i, N_r=%03i, nc_l=%06.4f, nc_r=%06.4f, dW=%06.4f, T=%05.1f, AvMag=%06.4f, Source=%s" %(material, N_l, N_r, nc_l, nc_r, DeltaW, T, avmag, path)
 							self.data.append((material, N_l, N_r, nc_l, nc_r, DeltaW, T, avmag, path))
 	
@@ -448,7 +473,9 @@ class heterostructure_database:
 	def get_temp_output(self, t):
 			return "t%07.3f/" % t
 	# archive results
-	def archive(self, dest='/home/stollenw/projects/euo/results/heterostructures/'):
+	def archive(self, dest='/home/stollenw/projects/euo/results/heterostructure/'):
+		if not os.path.exists(dest):
+			os.makedirs(dest)
 		for d in self.data:
 			print "archive", d 
 			dest_path=dest + self.get_output(d[0], d[1], d[2], d[3], d[4], d[5])
@@ -464,7 +491,7 @@ class heterostructure_database:
 			cmd="rsync -avztq %s %s" % ("%s/results" % d[8], dest_temp_path)
 			subprocess.call(cmd, shell=True)
 			f=open("%s/origin.txt" % dest_temp_path, 'w')
-			f.write("%s\n" % d[9])
+			f.write("%s\n" % d[8])
 			f.close()
 
 	def download_results(self, material, N, M, ni, ncr, dW, T, dest, source='stollenw@heisenberg.physik.uni-bonn.de:/home/stollenw/projects/euo/results/isolated/'):
@@ -473,7 +500,7 @@ class heterostructure_database:
 				sourch_path=source + self.get_output(d[0], d[1], d[2], d[3], d[4], d[5])
 				dest_path  =dest   + self.get_output(d[0], d[1], d[2], d[3], d[4], d[5])
 				if not os.path.exists(dest_path):
-					os.mkdir(dest_path)
+					os.makedirs(dest_path)
 				source_temp_path=source_path + self.get_temp_output(d[6])
 				dest_temp_path  =dest_path   + self.get_temp_output(d[6])
 				if not os.path.exists(dest_temp_path):
@@ -486,7 +513,7 @@ class heterostructure_database:
 					cmd="rsync -avztq %s %s" % ("%s/results" % source_temp_path, dest_temp_path)
 					subprocess.call(cmd, shell=True)
 					f=open("%s/origin.txt" % dest_temp_path, 'w')
-					f.write("%s\n" % d[9])
+					f.write("%s\n" % d[8])
 					f.close()
 
 				except:
@@ -678,7 +705,7 @@ def add_input (runcmd, download_path=None, path=None):
 				database.download()
 				# find a folder with lower temperature than T
 				tmax=0.0
-				for d in sorted(filter(lambda element : element[0] == sp.get_system().name and element[1] == sp.N and element[2] == sp.ni, database.data), key= lambda element: element[3]):
+				for d in sorted(filter(lambda element : element[0] == sp.get_system().name and element[1] == sp.N and element[2] == sp.concentration, database.data), key= lambda element: element[3]):
 					t=d[3]
 					if t>tmax and t<=T:
 						tmax=t
@@ -693,7 +720,7 @@ def add_input (runcmd, download_path=None, path=None):
 				database.download()
 				# find a folder with lower temperature than T
 				tmax=0.0
-				for d in sorted(filter(lambda element : element[0] == sp.get_system().name and element[1] == sp.N and element[2] == sp.N0 and element[3] == sp.ni and element[4] == sp.n_cr and element[5] == sp.Delta_W, database.data), key= lambda element: element[3]):
+				for d in sorted(filter(lambda element : element[0] == sp.get_system().name and element[1] == sp.N and element[2] == sp.N0 and element[3] == sp.concentration and element[4] == sp.n_cr and element[5] == sp.Delta_W, database.data), key= lambda element: element[6]):
 					t=d[6]
 					if t>tmax and t<=T:
 						tmax=t

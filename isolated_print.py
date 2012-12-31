@@ -12,8 +12,8 @@ parameter=list(itertools.product(*parameter_list))
 
 parser = argparse.ArgumentParser(description='Print database for energy shifts in EuO and substrate')
 parser.add_argument('-d', '--database', default='/home/stollenw/projects/euo/database/isolated.db', help='Database file name')
-parser.add_argument('-p', '--plotfolder', default='/home/stollenw/projects/euo/database/plots', help='Database file name')
-parser.add_argument('-s', '--short', action='store_true', help='Database file name')
+parser.add_argument('-p', '--plotfolder', default='/home/stollenw/projects/euo/database/analysis/isolated/isodelta/', help='Database file name')
+parser.add_argument('-s', '--short', action='store_true', help='Less output')
 args = parser.parse_args()
 
 database=database.isolated_database()
@@ -21,6 +21,9 @@ if args.database!='/home/stollenw/projects/euo/database/isolated.db':
 	database.read(args.database)
 else:
 	database.download()
+
+if not os.path.exists(args.plotfolder):
+	os.makedirs(args.plotfolder)
 
 for p in parameter:
 	#print "# Material: %s, N=%03i, nc=%06.4f" %(p[0], p[1], p[2])
@@ -30,7 +33,7 @@ for p in parameter:
 	if len(filter(lambda element : element[0] == material and element[1] == N and element[2] == nc, database.data))!=0:
 		print p
 		print "Temperature\tDelta\t\tSource"
-		f = open("%s/isodeltas_%s_N%03i_nc%e.dat" % (args.plotfolder, material, N, nc), 'w')
+		f = open("%s/isodeltas_%s_N%03i_nc%06.4f.dat" % (args.plotfolder, material, N, nc), 'w')
 		for e in sorted(filter(lambda element : element[0] == material and element[1] == N and element[2] == nc, database.data), key= lambda element: element[3]):
 			if not args.short:
 				print "%e\t%e\t%s" % (e[3], e[4], e[5])
