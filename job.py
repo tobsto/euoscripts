@@ -30,6 +30,7 @@ class job:
 			if (os.path.exists(error_logfile)):
 				os.remove(error_logfile)
 
+		status=False
 		# run all jobs
 		for runcmd in self.cmd:
 			# append logs to logfiles
@@ -53,7 +54,7 @@ class job:
 			end=time.time()
 
 			# check status and send email
-			if status and self.verbose:
+			if status:
 				f=open("message.temp", 'w')
 				f.write("And error has occured during the job: %s.\n" % self.name)
 				f.write("Run command was: %s.\n" % runcmd)
@@ -70,7 +71,7 @@ class job:
 				subprocess.call(cmd, shell=True)
 				os.remove("message.temp")
 
-			elif status==False:
+			elif status==False and self.verbose:
 				f=open("message.temp", 'w')
 				f.write("Successful job: %s.\n" % self.name)
 				f.write("Run command was: %s.\n" % runcmd)
@@ -82,6 +83,7 @@ class job:
 				#print cmd
 				subprocess.call(cmd, shell=True)
 				os.remove("message.temp")
+		return status
 def main():
 	j=job('myjob', 'mylog', 'stollenwerk@th.physik.uni-bonn.de', ['sleep 1', 'sleep sdfjkl', 'sleep 2'], logappend=True)
 	j.run()

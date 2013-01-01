@@ -104,7 +104,7 @@ def run_shell_log(cmd, logstring, append, email, mailcmd):
 		
 def run_submit(cmd, logstring, append, email, mailcmd):
 	cmds=[cmd]
-	j=job.job(logstring, logstring, email, cmds, logappend=append, mailcmd=mailcmd)
+	j=job.job(logstring, logstring, email, cmds, logappend=append, verbose=True, mailcmd=mailcmd)
 	j.run()
 
 def run_print(cmd, logstring, append, email, mailcmd):

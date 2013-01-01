@@ -50,9 +50,8 @@ def main():
 		cmd+=" --no_archive"	
 
 	try:
-		rcmd="ssh heisenberg.physik.uni-bonn.de '%s'" % cmd
-		#print rcmd
-		subprocess.call(rcmd, shell=True)
+		rcmd=['ssh', 'heisenberg.physik.uni-bonn.de', '%s' % cmd]
+		subprocess.call(rcmd)
 	except:
 		print "Unable to update remote database. Break."
 		exit(1)

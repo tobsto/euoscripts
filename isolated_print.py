@@ -1,6 +1,8 @@
 #!/usr/bin/python
 import itertools
 import argparse
+import os
+
 import database
 
 #material_list = ['Metal','Heisenberg-Metal','EuGd0','Band-Magnetic-Metal']

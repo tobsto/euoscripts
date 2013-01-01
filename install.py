@@ -2,7 +2,7 @@
 
 import subprocess
 
-programms=['job.py', 'system_parameter.py', 'database.py', 'euorun.py', 'runeuo.py', 'heterostructure_remote.py','heterostructure_update.py', 'heterostructure_print.py', 'heterostructure_remote.py','heterostructure_update.py', 'heterostructure_print.py']
+programms=['job.py', 'system_parameter.py', 'database.py', 'euorun.py', 'run.py', 'isolated_remote.py','isolated_update.py', 'isolated_print.py', 'heterostructure_remote.py','heterostructure_update.py', 'heterostructure_print.py', 'get_total_magnetisation.py', 'reflect.py', 'waitrun.py']
 
 destinations=['/home/stollenw/Sonstiges/Programme/bin','/mnt/stollenw/sonstiges/local/python', '/mnt/dhome/programms/bin']
 for d in destinations:

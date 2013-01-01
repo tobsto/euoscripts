@@ -6,6 +6,7 @@ from shutil import copy
 import os
 
 def reflectData (filename):
+	folder,name=filename.rsplit('/',1)
 	# read in data
 	f = open(filename, 'r')
 	lines=f.readlines()
@@ -18,7 +19,7 @@ def reflectData (filename):
 	for i in range(1,len(data)):
 		data.insert(0, data[2*i-1])
 
-	filename_reflect='reflect_' + filename 
+	filename_reflect='%s/reflect_%s' %(folder, name)
 	f = open(filename_reflect, 'w')
 	for i in range(0,len(data)):
 		f.write("%i\t%s\n" % (i+1, data[i]))
