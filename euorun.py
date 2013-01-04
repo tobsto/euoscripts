@@ -234,7 +234,7 @@ class euorun:
 				if t!=temp:
 					print "Error: run_hetero: Temperatures do not match. This should not happen. Break." 
 					exit(1)
-		
+
 				# if not start isolated runs
 				if not exists_left or not exists_right:
 					if not exists_left:
@@ -267,7 +267,7 @@ class euorun:
 					if not exists_right:
 						# get name
 						runname_right="%s, N=%i, ni=%f, T=%f" % (material_right, N_right, nc_right, t)
-						self.write_log("* Isolated run necessary: %s\n" % runname_left)
+						self.write_log("* Isolated run necessary: %s\n" % runname_right)
 						# get run command
 						runcmd_right=self.mpicmd + " -np %i " % self.np
 						runcmd_right+=self.sp.get_runcmd_isolated(material_right, N_right, nc_right, t)

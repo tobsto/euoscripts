@@ -555,11 +555,18 @@ def get_isodeltas(cmd, dbpath=None):
 			N_left=sp.N
 			# the isolated system is mirror symmetric. For example, a heterostructure with N0=9
 			# corresponds to an isolated mirror symmetric system with N=5=9+1/2
-			N_right=int(sp.N0+1/2.0)
+			if (sp.N0%2==0):
+				print "Error: get_isodelta_info: No even values for number of layers in the right material allowed. Break."
+				exit(1)
+			N_right=int((sp.N0+1)/2.0)
 			# if the heterostructure is not mirror symmetric the left system with N=5 corresponds to a
 			# mirror symmetric system with N=3=5+1/2
 			if not sp.mirror:	
-				N_left=int(sp.N+1/2.0)
+				if (sp.N%2==0):
+					print "Error: get_isodelta_info: No even values for number of layers in the left, non-mirror-symmetric material allowed. Break."
+					exit(1)
+				N_left=int((sp.N+1)/2.0)
+
 			left_exists=db.exists(system.constituents[0], N_left, sp.concentration, sp.temperature)
 			right_exists=db.exists(system.constituents[1], N_right, sp.n_cr, sp.temperature)
 			isolated_cmd=''
@@ -597,11 +604,18 @@ def add_isodeltas(cmd, dbpath=None):
 			N_left=sp.N
 			# the isolated system is mirror symmetric. For example, a heterostructure with N0=9
 			# corresponds to an isolated mirror symmetric system with N=5=9+1/2
-			N_right=int(sp.N0+1/2.0)
+			if (sp.N0%2==0):
+				print "Error: get_isodelta_info: No even values for number of layers in the right material allowed. Break."
+				exit(1)
+			N_right=int((sp.N0+1)/2.0)
 			# if the heterostructure is not mirror symmetric the left system with N=5 corresponds to a
 			# mirror symmetric system with N=3=5+1/2
 			if not sp.mirror:	
-				N_left=int(sp.N+1/2.0)
+				if (sp.N%2==0):
+					print "Error: get_isodelta_info: No even values for number of layers in the left, non-mirror-symmetric material allowed. Break."
+					exit(1)
+				N_left=int((sp.N+1)/2.0)
+
 			Delta_l=db.getDelta(system.constituents[0], N_left, sp.concentration, sp.temperature)
 			cmd+=" --Delta_l0 %0.15e" % Delta_l
 			Delta_r=db.getDelta(system.constituents[1], N_right, sp.n_cr, sp.temperature)
@@ -633,11 +647,18 @@ def get_isodelta_info(cmd, dbpath=None):
 			N_left=sp.N
 			# the isolated system is mirror symmetric. For example, a heterostructure with N0=9
 			# corresponds to an isolated mirror symmetric system with N=5=9+1/2
-			N_right=int(sp.N0+1/2.0)
+			if (sp.N0%2==0):
+				print "Error: get_isodelta_info: No even values for number of layers in the right material allowed. Break."
+				exit(1)
+			N_right=int((sp.N0+1)/2.0)
 			# if the heterostructure is not mirror symmetric the left system with N=5 corresponds to a
 			# mirror symmetric system with N=3=5+1/2
 			if not sp.mirror:	
-				N_left=int(sp.N+1/2.0)
+				if (sp.N%2==0):
+					print "Error: get_isodelta_info: No even values for number of layers in the left, non-mirror-symmetric material allowed. Break."
+					exit(1)
+				N_left=int((sp.N+1)/2.0)
+
 			left_exists=db.exists(system.constituents[0], N_left, sp.concentration, sp.temperature)
 			right_exists=db.exists(system.constituents[1], N_right, sp.n_cr, sp.temperature)
 			return (left_exists, system.constituents[0], N_left, sp.concentration, right_exists, system.constituents[1], N_right, sp.n_cr, sp.temperature)
