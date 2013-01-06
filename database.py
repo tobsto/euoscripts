@@ -494,10 +494,10 @@ class heterostructure_database:
 			f.write("%s\n" % d[8])
 			f.close()
 
-	def download_results(self, material, N, M, ni, ncr, dW, T, dest, source='stollenw@heisenberg.physik.uni-bonn.de:/home/stollenw/projects/euo/results/isolated/'):
+	def download_results(self, material, N, M, ni, ncr, dW, T, dest, source='stollenw@heisenberg.physik.uni-bonn.de:/home/stollenw/projects/euo/results/heterostructure/'):
 		for d in self.data:
 			if material==d[0] and N==d[1]  and M==d[2] and ni==d[3] and ncr==d[4] and dW==d[5] and T==d[6]:
-				sourch_path=source + self.get_output(d[0], d[1], d[2], d[3], d[4], d[5])
+				source_path=source + self.get_output(d[0], d[1], d[2], d[3], d[4], d[5])
 				dest_path  =dest   + self.get_output(d[0], d[1], d[2], d[3], d[4], d[5])
 				if not os.path.exists(dest_path):
 					os.makedirs(dest_path)
@@ -747,7 +747,7 @@ def add_input (runcmd, download_path=None, path=None):
 						tmax=t
 
 				if tmax>0.0:
-					inputFolder=database.download_results(sp.get_system().name, sp.N, sp.N0, sp.concentration, sp.n_cr, tmax, download_path)
+					inputFolder=database.download_results(sp.get_system().name, sp.N, sp.N0, sp.concentration, sp.n_cr, sp.Delta_W, tmax, download_path)
 					runcmd+=" -i " + inputFolder + "/"
 
 	return runcmd
