@@ -7,7 +7,7 @@ import argparse
 # Update database for energy shifts in EuO and substrate
 def main():
 	parser = argparse.ArgumentParser(description='Update database for energy shifts in EuO and substrate')
-	parser.add_argument('input', nargs='+', help='Folders containing results of isolated material runs or folders containing subfolders with results')
+	parser.add_argument('input', nargs='*', help='Folders containing results of isolated material runs or folders containing subfolders with results')
   	parser.add_argument('-d', '--database', default='/home/stollenw/projects/euo/database/isolated.db', help='Database file name')
   	#parser.add_argument('-r', '--remote_database', default='stollenw@heisenberg.physik.uni-bonn.de:/home/stollenw/projects/euo/database/isolated.db', help='Remote database path (e.g. user@host:/database.db)')
   	parser.add_argument('--overwrite', action='store_true', help='Overwrite database')

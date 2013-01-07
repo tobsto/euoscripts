@@ -7,7 +7,7 @@ import argparse
 # Update database for energy shifts in EuO and substrate
 def main():
 	parser = argparse.ArgumentParser(description='Update database for heterostructure runs')
-	parser.add_argument('input', nargs='+', help='Folders containing results of heterostructure material runs or folders containing subfolders with results')
+	parser.add_argument('input', nargs='*', help='Folders containing results of heterostructure material runs or folders containing subfolders with results')
   	parser.add_argument('-d', '--database', default='/home/stollenw/projects/euo/database/hetero.db', help='Database file name')
   	parser.add_argument('--overwrite', action='store_true', help='Overwrite database')
   	parser.add_argument('--no_archive', action='store_true', help='Do not archive results')
