@@ -5,8 +5,13 @@ import subprocess
 
 # class defining different types of physical systems
 class physical_system:
-	def __init__(self, name, positve, negative, constituents=(None,None)):
+	def __init__(self, name, material_class, positve, negative, constituents=(None,None)):
 		self.name=name
+		if material_class!='bulk' and material_class!='isolated' and material_class!='heterostructure':
+			print "Error: physical system class: Unknown material class: %s" % material_class
+			print "Allowed classes are: 'bulk', 'isolated' and 'heterostructure'. Break."
+			exit(1)
+		self.material_class=material_class
 		self.positive=positive
 		self.negative=negative
 		self.constituents=constituents
@@ -37,8 +42,69 @@ common_positive['fltol']=1E-7
 common_positive['tol']=1E-3
 common_positive['twod']=False
 
+#######################################
+### Bulk materials ####################
+#######################################
+# bulk metal
+name='Bulk-Metal'
+material_class='bulk'
+positive={}
+positive['N']=1
+positive['N0']=0
+positive['impurity']='None'
+positive['Jcf']=0.0
+positive['eta']=0.0
+positive.update(common_positive)
+negative={}
+physical_systems.append(physical_system (name, material_class, positive, negative))
+
+# bulk heisenberg-metal
+name='Bulk-Heisenberg-Metal'
+material_class='bulk'
+positive={}
+positive['N']=1
+positive['N0']=0
+positive['impurity']='None'
+positive['Jcf']=0.05
+positive['eta']=0.0
+positive.update(common_positive)
+negative={}
+physical_systems.append(physical_system (name, material_class, positive, negative))
+
+# EuGdO
+name='Bulk-EuGdO'
+material_class='bulk'
+positive={}
+positive['N']=1
+positive['N0']=0
+positive['impurity']='Gd'
+positive['ncc_gad']=0.9952
+positive['Jcf']=0.05
+positive['eta']=1E-9
+positive.update(common_positive)
+negative={}
+physical_systems.append(physical_system (name, material_class, positive, negative))
+
+# EuO_1-x
+name='Bulk-EuO_1-x'
+material_class='bulk'
+positive={}
+positive['N']=1
+positive['N0']=0
+positive['impurity']='O'
+positive['ncc_gad']=0.9864
+positive['Jcf']=0.05
+positive['eta']=1E-9
+positive.update(common_positive)
+negative={}
+physical_systems.append(physical_system (name, material_class, positive, negative))
+
+#######################################
+### Isolated materials ################
+#######################################
 # metal
 name='Metal'
+material_class='isolated'
 positive={}
 positive['N0']=0
 positive['impurity']='None'
@@ -47,10 +113,11 @@ positive['eta']=0.0
 positive['mirror']=True
 positive.update(common_positive)
 negative={}
-physical_systems.append(physical_system (name, positive, negative))
+physical_systems.append(physical_system (name, material_class, positive, negative))
 
 # heisenberg-metal
 name='Heisenberg-Metal'
+material_class='isolated'
 positive={}
 positive['N0']=0
 positive['impurity']='None'
@@ -59,10 +126,11 @@ positive['eta']=0.0
 positive['mirror']=True
 positive.update(common_positive)
 negative={}
-physical_systems.append(physical_system (name, positive, negative))
+physical_systems.append(physical_system (name, material_class, positive, negative))
 
 # EuGdO
 name='EuGdO'
+material_class='isolated'
 positive={}
 positive['N0']=0
 positive['impurity']='Gd'
@@ -72,10 +140,14 @@ positive['eta']=1E-9
 positive['mirror']=True
 positive.update(common_positive)
 negative={}
-physical_systems.append(physical_system (name, positive, negative))
+physical_systems.append(physical_system (name, material_class, positive, negative))
 
+#######################################
+### Two component heterostructures ####
+#######################################
 # EuGdO-Metal-Heterostructure
 name='EuGdO-Metal-Heterostructure-eta1e-4'
+material_class='heterostructure'
 left='EuGdO'
 right='Metal'
 positive={}
@@ -88,10 +160,11 @@ positive['insulator']=False
 positive.update(common_positive)
 negative={}
 negative['N0']=0
-physical_systems.append(physical_system (name, positive, negative, (left,right)))
+physical_systems.append(physical_system (name, material_class, positive, negative, (left,right)))
 
 # HeisenbergMetal-Metal-Heterostructure
 name='HeisenbergMetal-Metal-Heterostructure'
+material_class='heterostructure'
 left='Heisenberg-Metal'
 right='Metal'
 positive={}
@@ -103,10 +176,11 @@ positive['insulator']=False
 positive.update(common_positive)
 negative={}
 negative['N0']=0
-physical_systems.append(physical_system (name, positive, negative, (left,right)))
+physical_systems.append(physical_system (name, material_class, positive, negative, (left,right)))
 
 # Metal-Metal-Heterostructure
 name='Metal-Metal-Heterostructure'
+material_class='heterostructure'
 left='Metal'
 right='Metal'
 positive={}
@@ -118,7 +192,7 @@ positive['insulator']=False
 positive.update(common_positive)
 negative={}
 negative['N0']=0
-physical_systems.append(physical_system (name, positive, negative, (left,right)))
+physical_systems.append(physical_system (name, material_class, positive, negative, (left,right)))
 
 ############################################
 # extract options from run command string
@@ -336,11 +410,20 @@ class system_parameter:
 				return system
 		return None
 
+	def get_system_by_name(self, system_name):
+		for system in self.physical_systems:
+			if system.name==system_name:
+				return system
+
+		print "Error: System parameter class: Unknown system: %s. Break." % name
+		exit(1)
+
+
 	# get run command for isolated systems
 	def get_runcmd_hetero(self, name, N, M, ni, ncr, dW, T=None):
 		for system in self.physical_systems:
 			if (system.name==name):
-				if system.constituents==(None,None):
+				if system.material_class!='heterostructure':
 					print "Error: System parameter class: Not a heterostructure system: %s. Break." % name
 					exit(1)
 				runcmd='euo.out'
@@ -363,7 +446,7 @@ class system_parameter:
 	def get_runcmd_isolated(self, name, N, nc, T=None):
 		for system in self.physical_systems:
 			if (system.name==name):
-				if system.constituents!=(None,None):
+				if system.material_class!='isolated':
 					print "Error: System parameter class: Not an isolated system: %s. Break." % name
 					exit(1)
 				runcmd='euo.out'
@@ -382,6 +465,31 @@ class system_parameter:
 		# if system name is not found:
 		print "Error: System parameter class: Unknown system: %s. Break." % name
 		exit(1)
+
+	def get_runcmd_bulk(self, name, ni, T=None):
+		for system in self.physical_systems:
+			if (system.name==name):
+				if system.material_class!='bulk':
+					print "Error: System parameter class: Not an isolated system: %s. Break." % name
+					exit(1)
+				runcmd='euo.out'
+				for (key, value) in system.positive.items():
+					if not key in common_positive:
+						if type(value)!=bool:
+							runcmd+=' --%s %s' % (key, value)
+						else:
+							if value==True:
+								runcmd+=' --%s' % key
+				if T==None:
+					runcmd+=' -x %e' % (ni)
+				else:
+					runcmd+=' -x %e -t %e' % (ni, T)
+				return runcmd
+		# if system name is not found:
+		print "Error: System parameter class: Unknown system: %s. Break." % name
+		exit(1)
+
+
 
 	def get_physical_system(self, name):
 		for system in self.physical_systems:

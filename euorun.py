@@ -11,17 +11,30 @@ import system_parameter
 def system_equal(sp1, sp2):
 	# conditions
 	conditions=[]
+	# bulk, isolated and heterostructure parameter
+	conditions.append(sp1.get_system().material_class==sp2.get_system().material_class)
 	conditions.append(sp1.get_system().name==sp2.get_system().name)
-	conditions.append(sp1.N==sp2.N)
 	conditions.append(sp1.concentration==sp2.concentration)
-	if sp1.get_system().constituents!=(None,None):
+	# isolated and heterostructure parameter
+	if sp1.get_system().material_class=='isolated':
+		conditions.append(sp1.N==sp2.N)
+	# heterostructure parameter
+	if sp1.get_system().material_class=='heterostructure':
 		conditions.append(sp1.N0==sp2.N0)
 		conditions.append(sp1.n_cr==sp2.n_cr)
 		conditions.append(sp1.Delta_W==sp2.Delta_W)
 	return all(conditions)
 
 def database_exists(sp):
-	if sp.get_system().constituents==(None,None):
+	if sp.get_system().material_class=='bulk':
+		bdb=database.bulk_database()
+		bdb.download()
+		if bdb.exists(sp.get_system().name, sp.concentration, sp.temperature):
+			return True
+		else:
+			return False
+
+	elif sp.get_system().material_class=='isolated':
 		idb=database.isolated_database()
 		idb.download()
 		if idb.exists(sp.get_system().name, sp.N, sp.concentration, sp.temperature):
@@ -47,7 +60,7 @@ def get_worker():
 	exit(1)
 	
 class euorun:
-	def __init__(self, np, material, N=5, M=None, ni=0.01, ncr=None, dW=None, output=None, input=None, initial_input=None, inputFlag=True, isoDeltaFlag=True, updatedbFlag=True, iteration_parameter=None, get_default_iteration_parameter=None, log='run', verbose=True, email='stollenwerk@th.physik.uni-bonn.de', mailcmd='mailx -s'):
+	def __init__(self, np, material, N=5, M=None, ni=0.01, ncr=None, dW=None, output=None, input=None, initial_input=None, inputFlag=True, isoDeltaFlag=True, updatedbFlag=True, iteration_parameter=None, get_default_iteration_parameter=None, check_database=False, log='run', verbose=True, email='stollenwerk@th.physik.uni-bonn.de', mailcmd='mailx -s'):
 		# number of nodes
 		self.np=np
 		# material name
@@ -83,12 +96,9 @@ class euorun:
 			self.get_default_iteration_parameter=get_default_iteration_parameter
 		else:
 			self.get_default_iteration_parameter=database.get_iteration_parameter
-		# isolated flag
-		self.isolated=False
-		if M==None or ncr==None or dW==None:
-			self.isolated=True
-
 	
+		# check database before a run, if it exists don't run again
+		self.check_database=check_database
 		# logfile name
 		self.log=log
 		# email address
@@ -100,18 +110,26 @@ class euorun:
 
 		# keep an instance of the system parameter class for later use
 		self.sp=system_parameter.system_parameter()
+		# keep an instance of bulk database for later use
+		self.bdb=database.bulk_database()
+		self.bdb.download()
 		# keep an instance of isolated database for later use
 		self.idb=database.isolated_database()
 		self.idb.download()
 		# keep an instance of heterostructure database for later use
 		self.hdb=database.heterostructure_database()
 		self.hdb.download()
+		
+		# get material class
+		self.material_class=self.sp.get_system_by_name(self.material).material_class
 
 		# get mpicmd
 		self.mpicmd=get_worker().mpicmd
 		# set top output folder to current working directory by default
 		if output==None:
-			if self.isolated:
+			if self.material_class=='bulk':
+				self.output=self.bdb.get_output(self.material, self.ni)
+			elif self.material_class=='isolated':
 				self.output=self.idb.get_output(self.material, self.N, self.ni)
 			else:
 				self.output=self.hdb.get_output(self.material, self.N, self.M, self.ni, self.ncr, self.dW)
@@ -160,7 +178,43 @@ class euorun:
 			return database_exists(sp)
 		else:
 			return False
-					
+
+	def run_bulk(self, t, special_input=None):
+		# run name
+		runname="%s, ni=%f, T=%f" % (self.material,  self.ni, t)
+		self.write_log("##############################################\n")
+		self.write_log("### euorun: %s\n" % runname)
+		self.write_log("##############################################\n")
+		# run command
+		runcmd=self.mpicmd + " -np %i " % self.np
+		runcmd+=self.sp.get_runcmd_bulk(self.material, self.ni, t)
+		# add additional parameter
+		runcmd+=self.iteration_parameter
+		# add output
+		runoutput=self.output + self.idb.get_temp_output(t)
+		runcmd+=" -o %s/" % runoutput
+		# add special input folder
+		if special_input!=None:
+			runcmd+=" -i %s" % (special_input)
+		# search self.input folder for suitable input folders and add it
+		else:
+			if self.inputFlag:
+				runcmd=database.add_input(runcmd, download_path=self.output+"/download/", path=self.output)
+		# run job
+		if not self.run_exists(runcmd, runoutput, check_database=self.check_database):
+			j=job.job(runname, self.log, self.email, [runcmd], logappend=True, verbose=self.verbose, mailcmd=self.mailcmd)
+			j.run()
+
+		# update database
+		if self.updatedbFlag:
+			self.write_log("* Update bulk database\n")
+			updatecmd="bulk_remote.py --no_archive %s" % runoutput
+			#subprocess.call(updatecmd, shell=True)
+			j=job.job("update remote bulk database", self.log, self.email, [updatecmd], logappend=True, verbose=False, mailcmd=self.mailcmd)
+			j.run()
+		self.write_log("\n")
+
+			
 	def run_isolated(self, t, special_input=None):
 		# run name
 		runname="%s, N=%i, ni=%f, T=%f" % (self.material, self.N, self.ni, t)
@@ -184,7 +238,7 @@ class euorun:
 				runcmd=database.add_input(runcmd, download_path=self.output+"/download/", path=self.output)
 
 		# run job
-		if not self.run_exists(runcmd, runoutput, check_database=False):
+		if not self.run_exists(runcmd, runoutput, check_database=self.check_database):
 			j=job.job(runname, self.log, self.email, [runcmd], logappend=True, verbose=self.verbose, mailcmd=self.mailcmd)
 			j.run()
 
@@ -222,7 +276,7 @@ class euorun:
 
 		#print "check", runcmd
 		# check if run not already exist 
-		if not self.run_exists(runcmd, runoutput, check_database=False):
+		if not self.run_exists(runcmd, runoutput, check_database=self.check_database):
 			if self.isoDeltaFlag:
 				######################################################################################
 				####### add energy shift values for the isolated system constituents #################
@@ -312,7 +366,9 @@ class euorun:
 		self.write_log("\n")
 
 	def run(self, t, special_input=None):
-		if self.isolated:
+		if self.material_class=='bulk':
+			self.run_bulk(t, special_input)
+		elif self.material_class=='isolated':
 			self.run_isolated(t, special_input)
 		else:
 			self.run_hetero(t, special_input)
@@ -330,8 +386,12 @@ class euorun:
 			first=False
 
 		# send finishing notification
-		runname="%s, N=%i, ni=%f, T=" % (self.material, self.N, self.ni)
-		if not self.isolated:
+		runname=''
+		if self.material_class=='bulk':
+			runname="%s, ni=%f, T=" % (self.material, self.ni)
+		elif self.material_class=='isolated':
+			runname="%s, N=%i, ni=%f, T=" % (self.material, self.N, self.ni)
+		else:
 			runname="%s, N=%i, M=%i, ni=%f, ncr=%f, dW=%f, T=" % (self.material, self.N, self.M, self.ni, self.ncr, self.dW)
 		for t in temperatures:
 			runname +=" %f," % t
@@ -339,9 +399,150 @@ class euorun:
 		cmd="echo "" | %s 'Temperature sweep finished: %s on %s.' %s" % (self.mailcmd, runname, self.host, self.email)
 		subprocess.call(cmd, shell=True)
 
+	# extract magnetisation of a successful run
+	def extractMag(self, t):
+		magfile=None
+		if self.material_class=='bulk':
+			magfile=self.output + self.bdb.get_temp_output(t) + "results/totalmag.dat"
+		elif self.material_class=='isolated':
+			magfile=self.output + self.idb.get_temp_output(t) + "results/avmag.dat"
+		else:
+			magfile=self.output + self.hdb.get_temp_output(t) + "results/avmag.dat"
+		return float(database.extractResultValue2ndColumn(magfile))
+
+	# find Tc temperature sweep
+	def findtc(self, temperatures=None, tsteps=None, deltaM=None):
+		# prepare logfiles
+		self.log_prepare()
+
+		# default magnetisation precision
+		if deltaM==None:
+			deltaM=1.0E-2
+		# default temperatures steps
+		if temperatures==None:
+			temperatures=range(20,301,20)
+		# default temperatures steps
+		if tsteps==None:
+			# default temperature increments
+			tsteps=[160,80,40,20,10,5,2.5,1,0.1]
+		# tsteps must contain at least one entry
+		if len(tsteps)<1:
+			print "Error: euorun: find_tc: No temperature steps given. Break"
+			exit(1)	
+		# sort tsteps
+		tsteps.sort()
+		# reverse order (decendent)
+		tsteps.reverse()
+	
+		###############################
+		# first coarse temperature scan
+		###############################
+		# flag determine the first run	
+		first=True
+		# maximal magnetisation >(3.5 + cmag)
+		mag=10.0
+		# limiting temperatures below and above tc
+		tm=0.0
+		tp=temperatures[0]
+		# highest mag below tc
+		mag=3.5
+		mag_m=mag
+		# flag determine the first run	
+		first=True
+		for t in temperatures: 
+			# update highest temperature below Tc 
+			tm=tp
+			# update lowest magnetisation below tc
+			mag_m=mag
+			# update lowest temperature above Tc
+			tp=t
+			# run an add initial input for the first run
+			if first:
+				self.run(t, special_input=self.initial_input) 
+			else:
+				self.run(t) 
+			first=False
+			# get magnetisation
+			mag=self.extractMag(t)
+			#print "%07.3f\t%06.4f" % (t, mag)
+			# if magnetisation is below threshold abandon for loop
+			if mag<=deltaM:
+				break
+	
+		if mag>deltaM:
+			print "Error: euorun: findtc: Did not find phase transition with the given temperatures. Break"
+			exit(1)
+	
+		###############################
+		# reduce list of temperatrue steps 
+		# to temperature steps which are 
+		# smaller than last step: tp-tm
+		###############################
+		if tp-tm<=tsteps[-1]:
+			print "Error: euorun: find_tc: Temperature step %e is below allowed value %e. Break" % (tp-tm, tsteps[-1])
+			exit(1)	
+		# get list index in tsteps, where temperature steps become smaller than tp-tm
+		Icut=-1
+		for i in range(0,len(tsteps)-1):
+			if tp-tm>tsteps[i]:
+				Icut=i
+				break
+		tsteps=tsteps[Icut:]
+
+
+		###############################
+		# Automatic detailed search for Tc
+		###############################
+		# upper limit for temperatures (above tc)
+		tmax=tp
+		# increase precision (decrease temperature steps)
+		for dT in tsteps:
+			# start at highest known temperature below Tc 
+			t=tm
+			# set magnetisation below tc
+			mag=mag_m
+			# increase temperature until magnetisation drops below
+			# deltaM or temperature above Tc is reached
+			while mag>deltaM and t+dT<tmax:
+				# update highest temperature below Tc 
+				tm=t
+				# update lowest magnetisation below tc
+				mag_m=mag
+				# get next temperature
+				t=t+dT
+				# update lowest temperature above Tc
+				tp=t
+				# run an add initial input for the first run
+				if first:
+					self.run(t, special_input=self.initial_input) 
+				else:
+					self.run(t) 
+				first=False
+				# get magnetisation
+				mag=self.extractMag(t)
+
+
+		# found tc
+		tc=tm
+
+		##############################
+		# send finishing notification
+		##############################
+		runname=''
+		if self.material_class=='bulk':
+			runname="%s, ni=%f, Tc=%f" % (self.material, self.ni, tc)
+		elif self.material_class=='isolated':
+			runname="%s, N=%i, ni=%f, Tc=%f" % (self.material, self.N, self.ni, tc)
+		else:
+			runname="%s, N=%i, M=%i, ni=%f, ncr=%f, dW=%f, Tc=%f" % (self.material, self.N, self.M, self.ni, self.ncr, self.dW, tc)
+			
+		cmd="echo '' | %s 'Find Tc finished: %s on %s.' %s" % (self.mailcmd, runname, self.host, self.email)
+		subprocess.call(cmd, shell=True)
+
 def main():
-	erun=euorun(64, 'Metal', N=2, ni=0.5)
-	erun.tempsweep((21,22))
+	erun=euorun(1, 'Bulk-Heisenberg-Metal', N=1, ni=0.001)
+	#erun.tempsweep((21,22))
+	erun.findtc()
 
 if __name__=="__main__":
 	main()

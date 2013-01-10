@@ -9,7 +9,8 @@ material_list = ['EuGdO-Metal-Heterostructure-eta1e-4']
 N_list=[2,3,4,5,9,15]
 M_list=[9]
 ni_list=[0.005,0.01,0.02,0.05,0.1]
-ncr_list=[0.005,0.01,0.02,0.05,0.1,0.2,0.5,1.0]
+ncr_list=[0.005,0.01,0.02,0.05,0.1,0.2,0.5,0.6,0.7,0.8,0.9,1.0,1.1,1.2]
+
 dW_list=[-0.125,0.0625, 0.125, 0.1875]
 parameter_list=[material_list,N_list,M_list,ni_list,ncr_list,dW_list]
 parameter=list(itertools.product(*parameter_list))

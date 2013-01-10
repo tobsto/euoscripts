@@ -49,10 +49,6 @@ def tostring(val):
 		print "Error: Sting conversion: Unknown type. Break"
 		exit(1)
 
-###############################################
-# Database for isolated Deltas
-###############################################
-
 # mapping for remote worker clients
 class worker:
 	def __init__(self, host, serverdir, clientdir, mpicmd):
@@ -113,9 +109,215 @@ def get_iteration_parameter(system_name):
 	elif system_name=='Metal-Metal-Heterostructure':
 		return ''
 	else:
-		print "Error: get iteration parameter. Unknow system name: %s. Break." % system_name
-		exit(1)
+		return ''
+		#print "Error: get iteration parameter. Unknow system name: %s. Break." % system_name
+		#exit(1)
 
+###############################################
+# Database for bulk results
+###############################################
+class bulk_database:
+	def __init__(self):
+		self.names=('material', 'ni', 'T', 'mag', 'origin')
+		self.data=[]
+		self.workers=workers
+
+	def extractData (self, resultsFolder):
+		# get system parameter
+		parafilename="%s/parameter.cfg" % resultsFolder
+		sp=system_parameter()
+		sp.read_file(parafilename)
+		system=sp.get_system()
+		if (system==None):
+			print "ExtractValues: Unable to find matching system type. Break."
+			exit(1)
+		if (system.material_class!='bulk'):
+			print "ExtractValues: System in %s is not bulk. Break." % resultsFolder
+			exit(1)
+			
+		# get magnetisation value
+		magfilename="%s/results/totalmag.dat" % resultsFolder
+		mag=float(extractResultValue2ndColumn(magfilename))
+		return (system.name, sp.concentration, sp.temperature, mag, os.path.abspath(resultsFolder))
+
+
+	# write database to file
+	def write(self, filename):
+		f=open(filename, 'w')
+		f.write('{:<30}\tni\t\t\tT\t\t\tmag\t\t\torigin\n'.format('# material'))
+		for d in self.data:
+			f.write('{:<30}'.format(d[0]))
+			f.write('\t')
+			for val in d[1:]:
+				f.write(tostring(val))
+				f.write('\t')
+			f.write('\n')
+
+	# fill database 
+	def set(self, d):
+		self.data=d
+		self.names=('material', 'ni', 'T', 'mag', 'origin')
+
+	# read database from file
+	def read(self, filename):
+		f=open(filename, 'r')
+		lines=f.readlines()
+		f.close()
+
+		self.data=[]
+		for l in lines[1:]:
+			d=l.split()
+			material=d[0]
+			ni=float(d[1])
+			T=float(d[2])
+			mag=float(d[3])
+			origin=d[4]
+			self.data.append((material, ni, T, mag, origin))
+
+	# read in database from remote file
+	def download(self, remotepath='stollenw@heisenberg.physik.uni-bonn.de:/home/stollenw/projects/euo/database/bulk.db'):
+		cmd='scp %s bulk.db.temp' % remotepath
+		try:
+			proc = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE)
+			proc.wait()
+			self.read('bulk.db.temp')
+			os.remove('bulk.db.temp')
+		except:
+			print 'Error: Failed to retrieve remote bulk database: %s' % remotepath
+			print 'Break.'
+			exit(1)
+		
+	# overwrite database on remote host
+	def upload(self, remotepath=None):
+		if remotepath==None:
+			remotepath=self.remotepath
+		self.write('bulk.db.temp')
+		cmd='scp bulk.db.temp %s' % remotepath
+		try:
+			proc = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE)
+			proc.wait()
+			os.remove('bulk.db.temp')
+		except:
+			print 'Error: Failed to write onto remote bulk database: %s' % remotepath
+			print 'Break.'
+			exit(1)
+			
+	# check if special dataset exists in database
+	def exists(self, material, ni, T):
+		for d in self.data:
+			if material==d[0] and ni==d[1] and T==d[2]:
+				return True
+		return False
+
+	# get magnetisation
+	def getMag(self, material, ni, T):
+		for d in self.data:
+			if material==d[0] and ni==d[1] and T==d[2]:
+				return d[3]
+
+		print "Error: Unable to find dataset in database:"
+		print "material=%s" % material
+		print "ni=%s" % ni 
+		print "T=%s" % T
+		print "Break."
+		exit(1)
+	
+	# fill database by extracting results form a special folder
+	def fill(self, topResultsFolders, overwrite=False):
+		if overwrite:
+			self.data=[]
+		for topfolder in topResultsFolders:
+			# if top folder contains results
+			if os.path.isdir(topfolder) and isResults(topfolder):
+				(material, ni, T, mag, path)=self.extractData(topfolder)
+				if not self.exists(material, ni, T):
+					print "Adding dataset: %s, ni=%06.4f, T=%05.1f, mag=%06.4f, Source=%s" %(material, ni, T, mag, path)
+					self.data.append((material, ni, T, mag, path))
+
+			# if not search sub folder for results
+			else:
+				for d in os.listdir(topfolder):
+					folder=os.path.join(topfolder, d)
+					if os.path.isdir(folder) and isResults(folder):
+						(material, ni, T, mag, path)=self.extractData(folder)
+						if not self.exists(material, ni, T):
+							print "Adding dataset: %s, ni=%06.4f, T=%05.1f, mag=%06.4f, Source=%s" %(material, ni, T, mag, path)
+							self.data.append((material, ni, T, mag, path))
+	
+		# sort by 1st column i.e. material
+		self.data=sorted(self.data, key = lambda element : element[0])
+
+	def get_output(self, material, ni):
+			return "%s_ni%06.4f/" % (material, ni)
+	def get_temp_output(self, t):
+			return "t%07.3f/" % t
+	# archive results
+	def archive(self, dest='/home/stollenw/projects/euo/results/bulk/'):
+		if not os.path.exists(dest):
+			os.makedirs(dest)
+		for d in self.data:
+			print "archive", d 
+			dest_path=dest + self.get_output(d[0], d[1])
+			if not os.path.exists(dest_path):
+				os.mkdir(dest_path)
+			dest_temp_path=dest_path + self.get_temp_output(d[2])
+			if not os.path.exists(dest_temp_path):
+				os.mkdir(dest_temp_path)
+			try:
+				cmd="rsync -avztq %s %s" % ("%s/parameter.cfg" % d[4], dest_temp_path)
+				subprocess.call(cmd, shell=True)
+				cmd="rsync -avztq %s %s" % ("%s/source" % d[4], dest_temp_path)
+				subprocess.call(cmd, shell=True)
+				cmd="rsync -avztq %s %s" % ("%s/results" % d[4], dest_temp_path)
+				subprocess.call(cmd, shell=True)
+				f=open("%s/origin.txt" % dest_temp_path, 'w')
+				f.write("%s\n" % d[4])
+				f.close()
+
+			except:
+				print 'Error: Failed to archive: %s' % d[4]
+				print 'Break.'
+				exit(1)
+	# download results
+	def download_results(self, material, ni, T, dest, source='stollenw@heisenberg.physik.uni-bonn.de:/home/stollenw/projects/euo/results/bulk/'):
+		for d in self.data:
+			if material==d[0] and ni==d[1] and T==d[2]:
+				source_path=source + self.get_output(d[0], d[1])
+				dest_path  =dest   + self.get_output(d[0], d[1])
+				if not os.path.exists(dest_path):
+					os.makedirs(dest_path)
+				source_temp_path=source_path + self.get_temp_output(d[2])
+				dest_temp_path  =dest_path   + self.get_temp_output(d[2])
+				if not os.path.exists(dest_temp_path):
+					os.mkdir(dest_temp_path)
+				try:
+					cmd="rsync -avztq %s %s" % ("%s/parameter.cfg" % source_temp_path, dest_temp_path)
+					subprocess.call(cmd, shell=True)
+					cmd="rsync -avztq %s %s" % ("%s/source" % source_temp_path, dest_temp_path)
+					subprocess.call(cmd, shell=True)
+					cmd="rsync -avztq %s %s" % ("%s/results" % source_temp_path, dest_temp_path)
+					subprocess.call(cmd, shell=True)
+					f=open("%s/origin.txt" % dest_temp_path, 'w')
+					f.write("%s\n" % d[4])
+					f.close()
+
+				except:
+					print 'Error: Failed to read from remote archive: %s' % source_temp_path
+					print 'Break.'
+					exit(1)
+				
+				return dest_temp_path
+
+		print 'Error: Failed to find dataset in remote archive: %s' % source
+		print "material=%s" % material
+		print "ni=%s" % ni 
+		print "T=%s" % T
+		print "Break."
+		exit(1)
+	
+###############################################
+# Database for isolated Deltas
+###############################################
 class isolated_database:
 	def __init__(self):
 		self.names=('material', 'N', 'nc', 'T', 'Delta', 'origin')
@@ -131,7 +333,7 @@ class isolated_database:
 		if (system==None):
 			print "ExtractValues: Unable to find matching system type. Break."
 			exit(1)
-		if (system.constituents!=(None,None)):
+		if (system.material_class!='isolated'):
 			print "ExtractValues: System in %s is not isolated. Break." % resultsFolder
 			exit(1)
 			
@@ -145,7 +347,7 @@ class isolated_database:
 	# write database to file
 	def write(self, filename):
 		f=open(filename, 'w')
-		f.write('{:<30}\tN\tnc\t\t\tT\t\t\tDelta\t\t\torigin\n'.format('#mat'))
+		f.write('{:<30}\tN\tnc\t\t\tT\t\t\tDelta\t\t\torigin\n'.format('# material'))
 		for d in self.data:
 			f.write('{:<30}'.format(d[0]))
 			f.write('\t')
@@ -343,7 +545,7 @@ class heterostructure_database:
 		if (system==None):
 			print "ExtractValues: Unable to find matching system type. Break."
 			exit(1)
-		if (system.constituents==(None,None)):
+		if (system.material_class!='heterostructure'):
 			print "ExtractValues: System in %s is not a heterostructure. Break." % resultsFolder
 			exit(1)
 	
@@ -356,9 +558,9 @@ class heterostructure_database:
 	# write database to file
 	def write(self, filename):
 		f=open(filename, 'w')
-		f.write('{:<30}\tN\tM\tni\tncr\t\t\tdW\t\t\tT\t\t\tavmag\t\t\torigin\n'.format('#mat'))
+		f.write('{:<50}\tN\tM\tni\tncr\t\t\tdW\t\t\tT\t\t\tavmag\t\t\torigin\n'.format('# material'))
 		for d in self.data:
-			f.write('{:<30}'.format(d[0]))
+			f.write('{:<50}'.format(d[0]))
 			f.write('\t')
 			for val in d[1:]:
 				f.write(tostring(val))
@@ -551,7 +753,7 @@ def get_isodeltas(cmd, dbpath=None):
 	# check if system type is known
 	if system!=None:
 		# check if system is a heterostructure
-		if system.constituents!=(None, None):
+		if system.material_class=='heterostructure':
 			N_left=sp.N
 			# the isolated system is mirror symmetric. For example, a heterostructure with N0=9
 			# corresponds to an isolated mirror symmetric system with N=5=9+1/2
@@ -575,7 +777,8 @@ def get_isodeltas(cmd, dbpath=None):
 			if not right_exists:
 				isolated_cmd+=sp.get_runcmd(system.constituents[1]) + "; "
 		else:
-			print "Error: Isodeltas exist: Isolated System: %s" % cmd
+			print "Error: Get isodeltas: Cannot add isodeltas to non heterostructure system."
+			print "Cmd: %s" % cmd
 			print "Break."
 			exit(1)
 	else:
@@ -600,7 +803,7 @@ def add_isodeltas(cmd, dbpath=None):
 	# check if system type is known
 	if system!=None:
 		# check if system is a heterostructure
-		if system.constituents!=(None, None):
+		if system.material_class=='heterostructure':
 			N_left=sp.N
 			# the isolated system is mirror symmetric. For example, a heterostructure with N0=9
 			# corresponds to an isolated mirror symmetric system with N=5=9+1/2
@@ -643,7 +846,7 @@ def get_isodelta_info(cmd, dbpath=None):
 	# check if system type is known
 	if system!=None:
 		# check if system is a heterostructure
-		if system.constituents!=(None, None):
+		if system.material_class=='heterostructure':
 			N_left=sp.N
 			# the isolated system is mirror symmetric. For example, a heterostructure with N0=9
 			# corresponds to an isolated mirror symmetric system with N=5=9+1/2
@@ -663,9 +866,11 @@ def get_isodelta_info(cmd, dbpath=None):
 			right_exists=db.exists(system.constituents[1], N_right, sp.n_cr, sp.temperature)
 			return (left_exists, system.constituents[0], N_left, sp.concentration, right_exists, system.constituents[1], N_right, sp.n_cr, sp.temperature)
 		else:
-			print "Error: Isodeltas exist: Isolated System: %s" % cmd
+			print "Error: Get isodeltas: Cannot add isodeltas to non heterostructure system."
+			print "Cmd: %s" % cmd
 			print "Break."
 			exit(1)
+
 	else:
 		print "No know system matches the run command: %s" % cmd
 		print "Break."
@@ -720,8 +925,24 @@ def add_input (runcmd, download_path=None, path=None):
 		# no suitable input was found in local folder, check database
 		if foundInput==False and sp.get_system!=None:
 			database=None
+			# bulk systems
+			if sp.get_system().material_class=='bulk':
+				database=bulk_database()
+				database.download()
+				# find a folder with lower temperature than T
+				tmax=0.0
+				for d in sorted(filter(lambda element : element[0] == sp.get_system().name and element[1] == sp.concentration, database.data), key= lambda element: element[2]):
+					t=d[2]
+					if t>tmax and t<=T:
+						tmax=t
+
+				if tmax>0.0:
+					inputFolder=database.download_results(sp.get_system().name, sp.concentration, tmax, download_path)
+					runcmd+=" -i " + inputFolder + "/"
+
+
 			# isolated systems
-			if sp.get_system().constituents==(None,None):
+			elif sp.get_system().material_class=='isolated':
 				database=isolated_database()
 				database.download()
 				# find a folder with lower temperature than T
