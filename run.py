@@ -35,6 +35,7 @@ def main():
 	check_database=False
 	log='run'
 	verbose=True
+	temperatures=None
 	findtc=False
 	tsteps=None
 	deltaM=None
