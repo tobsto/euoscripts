@@ -5,18 +5,14 @@ import os
 
 import database
 
-#material_list = ['Metal','Heisenberg-Metal','EuGd0','Band-Magnetic-Metal']
-material_list = ['Metal','Heisenberg-Metal','EuGdO']
-N_list=[2,3,4,5,9,15]
-nc_list=[0.01,1.00]
-parameter_list=[material_list,N_list,nc_list]
-parameter=list(itertools.product(*parameter_list))
-
 parser = argparse.ArgumentParser(description='Print database for energy shifts in EuO and substrate')
 parser.add_argument('-d', '--database', default='/home/stollenw/projects/euo/database/isolated.db', help='Database file name')
 parser.add_argument('-p', '--plotfolder', default='/home/stollenw/projects/euo/database/analysis/isolated/isodelta/', help='Database file name')
 parser.add_argument('-s', '--short', action='store_true', help='Less output')
 args = parser.parse_args()
+
+if not os.path.exists(args.plotfolder):
+	os.makedirs(args.plotfolder)
 
 database=database.isolated_database()
 if args.database!='/home/stollenw/projects/euo/database/isolated.db':
@@ -24,8 +20,20 @@ if args.database!='/home/stollenw/projects/euo/database/isolated.db':
 else:
 	database.download()
 
-if not os.path.exists(args.plotfolder):
-	os.makedirs(args.plotfolder)
+# get columns of data and remove duplicates by converting to
+# a set (no duplicates) and back to a list 
+material_list=list(set([row[0] for row in database.data ]))
+N_list=list(set([int(row[1]) for row in database.data ]))
+nc_list=list(set([float(row[2]) for row in database.data ]))
+
+# sort data
+material_list.sort()
+N_list.sort()
+nc_list.sort()
+
+# all combinations
+parameter_list=[material_list,N_list,nc_list]
+parameter=list(itertools.product(*parameter_list))
 
 for p in parameter:
 	#print "# Material: %s, N=%03i, nc=%06.4f" %(p[0], p[1], p[2])
@@ -34,7 +42,10 @@ for p in parameter:
 	nc=p[2]
 	if len(filter(lambda element : element[0] == material and element[1] == N and element[2] == nc, database.data))!=0:
 		print p
-		print "Temperature\tDelta\t\tSource"
+		if not args.short:
+			print "Temperature\tDelta\t\tSource"
+		else:
+			print "Temperature\tDelta"
 		f = open("%s/isodeltas_%s_N%03i_nc%06.4f.dat" % (args.plotfolder, material, N, nc), 'w')
 		for e in sorted(filter(lambda element : element[0] == material and element[1] == N and element[2] == nc, database.data), key= lambda element: element[3]):
 			if not args.short:

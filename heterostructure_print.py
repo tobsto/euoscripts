@@ -5,16 +5,6 @@ import os
 
 import database
 
-material_list = ['EuGdO-Metal-Heterostructure-eta1e-4']
-N_list=[2,3,4,5,9,15]
-M_list=[9]
-ni_list=[0.005,0.01,0.02,0.05,0.1]
-ncr_list=[0.005,0.01,0.02,0.05,0.1,0.2,0.5,0.6,0.7,0.8,0.9,1.0,1.1,1.2]
-
-dW_list=[-0.125,0.0625, 0.125, 0.1875]
-parameter_list=[material_list,N_list,M_list,ni_list,ncr_list,dW_list]
-parameter=list(itertools.product(*parameter_list))
-
 parser = argparse.ArgumentParser(description='Print database for heterostructure runs')
 parser.add_argument('-d', '--database', default='/home/stollenw/projects/euo/database/hetero.db', help='Database file name')
 parser.add_argument('-p', '--plotfolder', default='/home/stollenw/projects/euo/database/analysis/hetero/avmag/', help='Database file name')
@@ -30,6 +20,27 @@ if args.database!='/home/stollenw/projects/euo/database/hetero.db':
 else:
 	database.download()
 
+# get columns of data and remove duplicates by converting to
+# a set (no duplicates) and back to a list 
+material_list=list(set([row[0] for row in database.data ]))
+N_list=list(set([int(row[1]) for row in database.data ]))
+M_list=list(set([int(row[2]) for row in database.data ]))
+ni_list=list(set([float(row[3]) for row in database.data ]))
+ncr_list=list(set([float(row[4]) for row in database.data ]))
+dW_list=list(set([float(row[5]) for row in database.data ]))
+
+# sort data
+material_list.sort()
+N_list.sort()
+M_list.sort()
+ni_list.sort()
+ncr_list.sort()
+dW_list.sort()
+
+# all combinations
+parameter_list=[material_list,N_list,M_list,ni_list,ncr_list,dW_list]
+parameter=list(itertools.product(*parameter_list))
+
 for p in parameter:
 	material = p[0]
 	N=p[1]
@@ -39,7 +50,10 @@ for p in parameter:
 	dW=p[5]
 	if len(filter(lambda element : element[0] == material and element[1] == N  and element[2] == M and element[3] == ni and element[4] == ncr and element[5] == dW, database.data))!=0:
 		print p
-		print "Temperature\tAvmag\t\tSource"
+		if not args.short:
+			print "Temperature\tAvmag\t\tSource"
+		else:
+			print "Temperature\tAvmag"
 		f = open("%s/avmag_%s_N%03i_M%03i_ni%06.4f_ncr%06.4f_dW%06.4f.dat" % (args.plotfolder, material, N, M, ni, ncr, dW), 'w')
 		for e in sorted(filter(lambda element : element[0] == material and element[1] == N  and element[2] == M and element[3] == ni and element[4] == ncr and element[5] == dW, database.data), key= lambda element: element[6]):
 			if not args.short:
