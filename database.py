@@ -70,6 +70,10 @@ workers.append(worker(	'bgem.th.physik.uni-bonn.de',
 			'/home/stollenw/runs/',
 			'/users/stollenw/runs/',
 			'mpirun'))
+workers.append(worker(	'cgem.th.physik.uni-bonn.de',
+			'/home/stollenw/runs/',
+			'/users/stollenw/runs/',
+			'mpirun'))
 workers.append(worker(	'stgeorgenamreith',
 			'/home/stollenw/runs/',
 			'/users/stollenw/runs/',
