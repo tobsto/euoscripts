@@ -506,10 +506,6 @@ class euorun:
 			# get next temperature
 			t=t+dT
 			while mag>deltaM and t<tmax:
-				# update highest temperature below Tc 
-				tm=t
-				# update lowest magnetisation below tc
-				mag_m=mag
 				# run an add initial input for the first run
 				if first:
 					self.run(t, special_input=self.initial_input) 
@@ -518,6 +514,11 @@ class euorun:
 				first=False
 				# get magnetisation
 				mag=self.extractMag(t)
+				if (mag>deltaM):
+					# update highest temperature below Tc 
+					tm=t
+					# update lowest magnetisation below tc
+					mag_m=mag
 				# get next temperature
 				t=t+dT
 
