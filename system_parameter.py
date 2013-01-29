@@ -146,6 +146,24 @@ physical_systems.append(physical_system (name, material_class, positive, negativ
 ### Two component heterostructures ####
 #######################################
 # EuGdO-Metal-Heterostructure
+name='EuGdO-Metal-Heterostructure-eta1e-6'
+material_class='heterostructure'
+left='EuGdO'
+right='Metal'
+positive={}
+positive['impurity']='Gd'
+positive['ncc_gad']=0.9952
+positive['Jcf']=0.05
+positive['eta']=1E-6
+positive['mirror']=True
+positive['insulator']=False
+positive.update(common_positive)
+negative={}
+negative['N0']=0
+physical_systems.append(physical_system (name, material_class, positive, negative, (left,right)))
+
+
+# EuGdO-Metal-Heterostructure
 name='EuGdO-Metal-Heterostructure-eta1e-4'
 material_class='heterostructure'
 left='EuGdO'
@@ -338,7 +356,7 @@ class system_parameter:
 
 		self.ncc_oxy            = float(extractParameter(parafilename, 'ncc_oxy'           ))
 		self.ncc_gad            = float(extractParameter(parafilename, 'ncc_gad'           ))
-		self.n_cr                = float(extractParameter(parafilename, 'n_cr'              ))
+		self.n_cr               = float(extractParameter(parafilename, 'n_cr'              ))
 		self.Delta_g            = float(extractParameter(parafilename, 'Delta_g'           ))
 		self.J4f                = float(extractParameter(parafilename, 'J4f'               ))
 		self.Jcf                = float(extractParameter(parafilename, 'Jcf'               ))
@@ -354,8 +372,8 @@ class system_parameter:
 		self.iota               = float(extractParameter(parafilename, 'iota'              ))
 		self.domega_log_max     = float(extractParameter(parafilename, 'domega_log_max'    ))
 		self.omega_log_1        = float(extractParameter(parafilename, 'omega_log_1'       ))
-		self.N_log              = float(extractParameter(parafilename, 'N_log'             ))
-		self.N_fermi            = float(extractParameter(parafilename, 'N_fermi'           ))
+		self.N_log              =   int(extractParameter(parafilename, 'N_log'             ))
+		self.N_fermi            =   int(extractParameter(parafilename, 'N_fermi'           ))
 		self.domega_min_steps_l = float(extractParameter(parafilename, 'domega_min_steps_l'))
 		self.domega_min_steps_r = float(extractParameter(parafilename, 'domega_min_steps_r'))
 		self.omega_min          = float(extractParameter(parafilename, 'omega_min'         ))
@@ -366,8 +384,8 @@ class system_parameter:
 		self.wr1                = float(extractParameter(parafilename, 'wr1'               ))
 		self.wr0                = float(extractParameter(parafilename, 'wr0'               ))
 		self.wru                = float(extractParameter(parafilename, 'wru'               ))
-		self.max1               = float(extractParameter(parafilename, 'max1'              ))
-		self.max2               = float(extractParameter(parafilename, 'max2'              ))
+		self.max1               =   int(extractParameter(parafilename, 'max1'              ))
+		self.max2               =   int(extractParameter(parafilename, 'max2'              ))
 	
 		self.insulator=False
 		if parameterExists(parafilename, 'insulator'):

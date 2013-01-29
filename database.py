@@ -44,7 +44,7 @@ def tostring(val):
 	elif type(val).__name__=='int':
 		return "%d" % val
 	elif type(val).__name__=='float':
-		return "%0.15e" % val
+		return "%0.17e" % val
 	else:
 		print "Error: Sting conversion: Unknown type. Break"
 		exit(1)
@@ -739,9 +739,115 @@ class heterostructure_database:
 		print "T=%s" % T
 		print "Break."
 		exit(1)
+##############################################################################
+##### Get isolated deltas from parameter configuration file
+##############################################################################
+def get_isodeltas_from_parafile(parafile, dbpath=None):
+	# read database
+	db=isolated_database()
+	if dbpath==None:
+		db.download()
+	else:
+		db.read(dbpath)
+	# get system parameter
+	sp=system_parameter()	
+	sp.read_file(parafile)
+	system=sp.get_system()
+	# check if system type is known
+	if system!=None:
+		# check if system is a heterostructure
+		if system.material_class=='heterostructure':
+			N_left=sp.N
+			# the isolated system is mirror symmetric. For example, a heterostructure with N0=9
+			# corresponds to an isolated mirror symmetric system with N=5=9+1/2
+			if (sp.N0%2==0):
+				print "Error: get_isodelta_info: No even values for number of layers in the right material allowed. Break."
+				exit(1)
+			N_right=int((sp.N0+1)/2.0)
+			# if the heterostructure is not mirror symmetric the left system with N=5 corresponds to a
+			# mirror symmetric system with N=3=5+1/2
+			if not sp.mirror:
+				if (sp.N%2==0):
+					print "Error: get_isodelta_info: No even values for number of layers in the left, non-mirror-symmetric material allowed. Break."
+					exit(1)
+				N_left=int((sp.N+1)/2.0)
+
+			left_exists=db.exists(system.constituents[0], N_left, sp.concentration, sp.temperature)
+			right_exists=db.exists(system.constituents[1], N_right, sp.n_cr, sp.temperature)
+			isolated_cmd=''
+			if not left_exists or not right_exists:
+				print "Error: Get isodeltas: Unable to get isolated delta values."
+				print "Break."
+				exit(1)
+
+			Delta_l=db.getDelta(system.constituents[0], N_left, sp.concentration, sp.temperature)
+			Delta_r=db.getDelta(system.constituents[1], N_right, sp.n_cr, sp.temperature)
+			return (Delta_l, Delta_r)
+		else:
+			print "Error: Get isodeltas: Cannot add isodeltas to non heterostructure system."
+			print "Break."
+			exit(1)
+	else:
+		print "No know system matches the run command: %s" % cmd
+		print "Break."
+		exit(1)
+
 
 ##############################################################################
-##### Get run commands necessary to get values of isolateds
+##### Get isolated deltas
+##############################################################################
+def get_isodeltas(matrial_name, N, M, ni, ncr, t, dbpath=None):
+	# read database
+	db=isolated_database()
+	if dbpath==None:
+		db.download()
+	else:
+		db.read(dbpath)
+	# get system parameter
+	sp=system_parameter()	
+	system=sp.get_system_by_name(material_name)
+	# check if system type is known
+	if system!=None:
+		# check if system is a heterostructure
+		if system.material_class=='heterostructure':
+			N_left=N
+			# the isolated system is mirror symmetric. For example, a heterostructure with N0=9
+			# corresponds to an isolated mirror symmetric system with N=5=9+1/2
+			if (M%2==0):
+				print "Error: get_isodelta_info: No even values for number of layers in the right material allowed. Break."
+				exit(1)
+			N_right=int((M+1)/2.0)
+			# if the heterostructure is not mirror symmetric the left system with N=5 corresponds to a
+			# mirror symmetric system with N=3=5+1/2
+			if not system.positive['mirror']:
+				if (N%2==0):
+					print "Error: get_isodelta_info: No even values for number of layers in the left, non-mirror-symmetric material allowed. Break."
+					exit(1)
+				N_left=int((N+1)/2.0)
+
+			left_exists=db.exists(system.constituents[0], N_left, ni, t)
+			right_exists=db.exists(system.constituents[1], N_right, n_cr, t)
+			isolated_cmd=''
+			if not left_exists or not right_exists:
+				print "Error: Get isodeltas: Cannot add isodeltas to non heterostructure system."
+				print "Break."
+				exit(1)
+
+			Delta_l=db.getDelta(system.constituents[0], N_left, ni, t)
+			Delta_r=db.getDelta(system.constituents[1], N_right, ncr, t)
+			return (Delta_l, Delta_r)
+		else:
+			print "Error: Get isodeltas: Cannot add isodeltas to non heterostructure system."
+			print "Break."
+			exit(1)
+	else:
+		print "No know system matches the run command: %s" % cmd
+		print "Break."
+		exit(1)
+
+
+##############################################################################
+##### Get run commands necessary to get values of isolated deltas
 ##############################################################################
 def get_isodeltas(cmd, dbpath=None):
 	# read database
@@ -824,15 +930,16 @@ def add_isodeltas(cmd, dbpath=None):
 				N_left=int((sp.N+1)/2.0)
 
 			Delta_l=db.getDelta(system.constituents[0], N_left, sp.concentration, sp.temperature)
-			cmd+=" --Delta_l0 %0.15e" % Delta_l
+			cmd+=" --Delta_l0 %0.17e" % Delta_l
 			Delta_r=db.getDelta(system.constituents[1], N_right, sp.n_cr, sp.temperature)
-			cmd+=" --Delta_r0 %0.15e" % Delta_r
+			cmd+=" --Delta_r0 %0.17e" % Delta_r
 
 			return cmd
 	else:
 		print "No know system matches the run command: %s" % cmd
 		print "Break."
 		exit(1)
+
 ##############################################################################
 ##### Check if energy shifts of isolated materials for known heterostruture already exist
 ##############################################################################
