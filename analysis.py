@@ -19,6 +19,7 @@ def main():
 	keyword_help="1.) cond: calculate the temperature dependent conductivity out of the given database"
 	parser.add_argument('keyword', help=keyword_help)
 	parser.add_argument('-d', '--database', help='Type of database: "bulk", "isolated" or "hetero"')
+	parser.add_argument('-s', '--dataset', nargs='*', help='Specify dataset e.g. "Metal-Metal-Heterostructure 5 9 0.01 0.01 0.125" (for material, N, M, ni, ncr and dW). You may use "all" as a placeholder or do not specify the last values e.g. "all 5 all 0.01" ')
 	parser.add_argument('-o', '--output', default='/home/stollenw/projects/euo/analysis/', help='Output folder (optional)')
 	args = parser.parse_args()
 
@@ -79,19 +80,8 @@ def main():
 		special='avmag'
 	db.download()
 
-	# get columns of data and remove duplicates by converting to
-	# a set (no duplicates) and back to a list (without temperature)
-	parameter_list=[]
-	for i in range(0, len(corenames[:-1])):
-		parameter_list.append(list(set([row[i] for row in db.data ])))
-	
-	# sort data
-	for pl in parameter_list:
-		pl.sort()
-	
-	# all combinations
-	parameter=list(itertools.product(*parameter_list))
-	
+	# get filtered data, i.e. reduce to defining properties without temperature
+	filtered_data=database.filtrate(db.data, corenames, args.dataset, len(corenames)-1)
 
 	# lower threshold for displaying results
 	min_result_number=1
@@ -106,50 +96,57 @@ def main():
 		
 
 	# iterate through database
-	for p in parameter:
+	for fd in filtered_data:
+		print fd
 		# defining name
-		namestr=db.get_output(*p).rstrip('/')
-		# get datasets from database which match current dataset (material, N, M, ...) and sort it by temperatures
-		filtered_datasets=sorted(filter(lambda element : all([element[i]==p[i] for i in range(0,len(p))]), db.data), key= lambda element: element[len(p)])
-		if (len(filtered_datasets)>=min_result_number):
-			print p
-			if args.keyword in simple_result_keywords:
-				# extract data from relevant folders	
-				cmd='cat '
-				for fd in filtered_datasets:
-					#cmd=cmd + "%s/results/%s.dat " % (fd[-1], args.keyword)
-					cmd=cmd + "%s/%s/%s/%s/results/%s.dat " % (resultFolder, subResultFolder, namestr, db.get_temp_output(fd[len(p)]), args.keyword)
-				cmd=cmd + " > %s/%s_%s.dat" % (suboutput, args.keyword, namestr)
-				subprocess.call(cmd, shell=True)	
-			elif args.keyword in sophisticated_result_keywords:
-				if args.keyword=='cond_para':
-					outfile="%s/%s_%s.dat" % (suboutput, args.keyword, namestr)
-					f=open(outfile, 'w')
-					for fd in filtered_datasets:
-						filename="%s/%s/%s/%s/results/%s.dat" % (resultFolder, subResultFolder, namestr, db.get_temp_output(fd[len(p)]), 'cond')
-						value=float(read(filename, line=0)[1])
-						temp=fd[len(p)]
-						f.write("%0.17e\t%0.17e\n" % (temp, value))
-					f.close()
-				if args.keyword=='resist_para':
-					outfile="%s/%s_%s.dat" % (suboutput, args.keyword, namestr)
-					f=open(outfile, 'w')
-					for fd in filtered_datasets:
-						filename="%s/%s/%s/%s/results/%s.dat" % (resultFolder, subResultFolder, namestr, db.get_temp_output(fd[len(p)]), 'resist')
-						value=float(read(filename, line=0)[1])
-						temp=fd[len(p)]
-						f.write("%0.17e\t%0.17e\n" % (temp, value))
-					f.close()
-			elif args.keyword=='print':
-				print 'Temperature\t%s' % special
-				for fd in filtered_datasets:
-					print "%e\t%e" % (fd[-3], fd[-2])
-				print
-			elif args.keyword=='printfull':
-				print 'Temperature\t%s\tSource' % special
-				for fd in filtered_datasets:
-					print "%e\t%e\t%s" % (fd[-3], fd[-2], fd[-1])
-				print
+		material_folder=db.get_output(*fd)
+		namestr=material_folder.rstrip('/')
+		# get all datasets corresponding to fd (different temperatures)
+		temperature_datasets=database.filtrate(db.data, corenames, fd)
+		if args.keyword in simple_result_keywords:
+			# extract data from relevant folders	
+			cmd='cat '
+			for td in temperature_datasets:
+				temperature_folder=db.get_temp_output(td[len(corenames)-1])
+				#cmd=cmd + "%s/results/%s.dat " % (fd[-1], args.keyword)
+				cmd=cmd + "%s/%s/%s/%s/results/%s.dat " % (resultFolder, subResultFolder, material_folder, temperature_folder, args.keyword)
+			cmd=cmd + " > %s/%s_%s.dat" % (suboutput, args.keyword, namestr)
+			subprocess.call(cmd, shell=True)	
+
+		elif args.keyword in sophisticated_result_keywords:
+			if args.keyword=='cond_para':
+				outfile="%s/%s_%s.dat" % (suboutput, args.keyword, namestr)
+				f=open(outfile, 'w')
+				for td in temperature_datasets:
+					temperature_folder=db.get_temp_output(td[len(corenames)-1])
+					filename="%s/%s/%s/%s/results/%s.dat" % (resultFolder, subResultFolder, material_folder, temperature_folder, 'cond')
+					value=float(read(filename, line=0)[1])
+					temp=td[len(corenames)-1]
+					f.write("%0.17e\t%0.17e\n" % (temp, value))
+				f.close()
+
+			if args.keyword=='resist_para':
+				outfile="%s/%s_%s.dat" % (suboutput, args.keyword, namestr)
+				f=open(outfile, 'w')
+				for td in temperature_datasets:
+					temperature_folder=db.get_temp_output(td[len(corenames)-1])
+					filename="%s/%s/%s/%s/results/%s.dat" % (resultFolder, subResultFolder, material_folder, temperature_folder, 'resist')
+					value=float(read(filename, line=0)[1])
+					temp=td[len(corenames)-1]
+					f.write("%0.17e\t%0.17e\n" % (temp, value))
+				f.close()
+
+		elif args.keyword=='print':
+			print 'Temperature\t%s' % special
+			for td in temperature_datasets:
+				print "%e\t%e" % (td[-3], td[-2])
+			print
+
+		elif args.keyword=='printfull':
+			print 'Temperature\t%s\tSource' % special
+			for td in temperature_datasets:
+				print "%e\t%e\t%s" % (td[-3], td[-2], td[-1])
+			print
 
 if __name__=="__main__":
 	main()

@@ -29,7 +29,7 @@ def getcond(inputFolder, mpicmd, np=1, isodeltadb=False, outputFolder=None):
 		parafile=inputFolder+"/parameter.cfg"
 		(Delta_l, Delta_r)=database.get_isodeltas_from_parafile(parafile)
 		runcmd=runcmd + " --Delta_l0 %0.17e --Delta_r0 %0.17e" % (Delta_l, Delta_r)
-	#print runcmd
+	print runcmd
 	subprocess.call(runcmd, shell=True)
 
 def getcondremote(host, db, filenames, inputFolder, mpicmd, np=1, isodeltadb=False, outputFolder=None):
@@ -83,10 +83,7 @@ def main():
 	#parser.add_argument('--force_download', action="store_true", help='Download *all* results from database, even if they exist in the current folder')
 	args = parser.parse_args()
 	
-	if not args.database in ('bulk', 'isolated', 'hetero'):
-		print "Database must be 'bulk', 'isolated' or 'hetero'"
-		exit(1)
-		
+
 	# remote or heisenberg
 	host=database.get_host()
 	# get mpi run command depening on host
@@ -98,53 +95,44 @@ def main():
 	if not args.input==None:
 		getcond(args.input, np=args.np, isodeltadb=args.no_isodelta_db, outputFolder=args.output)
 	else:
+		if not args.database in ('bulk', 'isolated', 'hetero'):
+			print "Database must be 'bulk', 'isolated' or 'hetero'"
+			exit(1)
+			
+		db=None
+		corenames=None
+		isodeltadb=False
 		if args.database=='bulk':
-			# bulk database
-			print "Bulk database"
+			db=database.bulk_database()	
+			corenames=('material', 'ni', 'T')
 			filenames=("cond.dat", "resist.dat")
-			bdb=database.bulk_database()	
-			bdb.download()
-			for (material, ni, T, mag, path) in bdb.data:
-				result_folder = "/home/stollenw/projects/euo/results/bulk/" + bdb.get_output(material, ni) + bdb.get_temp_output(T)
-				# check if conductivity calculation was already performed
-				print "check %s, ni=%f, T=%f ..." % (material, ni, T)
-				exists=check_file_exists(host, '%s/results/cond.dat' % result_folder)
-				# calculate conductivity if necessary or forced
-				if not exists or args.overwrite:
-					print "calculate %s, ni=%f, T=%f ..." % (material, ni, T)
-					getcondremote(host, bdb, filenames, result_folder, mpicmd, np=args.np, isodeltadb=False)
-
-		if args.database=='isolated':
-			# isolated database
-			print "Isolated database"
+			top_result_folder = "/home/stollenw/projects/euo/results/bulk/"
+		elif args.database=='isolated':
+			db=database.isolated_database()	
+			corenames=('material', 'N', 'ni', 'T')
+			top_result_folder = "/home/stollenw/projects/euo/results/isolated/"
 			filenames=("cond.dat", "resist.dat", "cond_perp.dat", "resist_perp.dat", "cond_perp_matrix.dat", "resist_perp_matrix.dat")
-			idb=database.isolated_database()	
-			idb.download()
-			for (material, N, ni, T, isodelta, path) in idb.data:
-				result_folder = "/home/stollenw/projects/euo/results/isolated/" + idb.get_output(material, N, ni) + idb.get_temp_output(T)
-				# check if conductivity calculation was already performed
-				print "check %s, N=%i, ni=%f, T=%f ..." % (material, N, ni, T)
-				exists=check_file_exists(host, '%s/results/cond_perp_matrix.dat' % result_folder)
-				# calculate conductivity if necessary or forced
-				if not exists or args.overwrite:
-					print "calculate %s, N=%i, ni=%f, T=%f ..." % (material, N, ni, T)
-					getcondremote(host, idb, filenames, result_folder, mpicmd, np=args.np, isodeltadb=False)
+		else:
+			db=database.heterostructure_database()	
+			corenames=('material', 'N', 'M', 'ni', 'ncr', 'dW', 'T')
+			top_result_folder = "/home/stollenw/projects/euo/results/heterostructure/"
+			filenames=("cond.dat", "resist.dat", "cond_perp.dat", "resist_perp.dat", "cond_perp_matrix.dat", "resist_perp_matrix.dat")
+			isodeltadb=args.no_isodelta_db
+		db.download()
 	
-		if args.database=='hetero':
-			# heterostructure database
-			print "Heterostructure database"
-			filenames=("cond.dat", "resist.dat", "cond_perp.dat", "resist_perp.dat", "cond_perp_matrix.dat", "resist_perp_matrix.dat")
-			hdb=database.heterostructure_database()	
-			hdb.download()
-			for (material, N, M, ni, ncr, dW, T, avmag, path) in hdb.data:
-				result_folder = "/home/stollenw/projects/euo/results/heterostructure/" + hdb.get_output(material, N, M, ni, ncr, dW) + hdb.get_temp_output(T)
-				# check if conductivity calculation was already performed
-				print "check %s, N=%i, M=%i, ni=%f, ncr=%f, dW=%f, T=%f ..." % (material, N, M, ni, ncr, dW, T)
-				exists=check_file_exists(host, '%s/results/cond_perp_matrix.dat' % result_folder)
-				# calculate conductivity if necessary or forced
-				if not exists or args.overwrite:
-					print "calculate %s, N=%i, M=%i, ni=%f, ncr=%f, dW=%f, T=%f ..." % (material, N, M, ni, ncr, dW, T)
-					getcondremote(host, hdb, filenames, result_folder, mpicmd, np=args.np, isodeltadb=args.no_isodelta_db)
+		# get filtered data, i.e. reduce according to args.dataset (if not given, only sort)
+		filtered_data=database.filtrate(db.data, corenames, args.dataset, len(corenames))
+
+		for fd in filtered_data:
+			print fd
+			result_folder = top_result_folder + db.get_output(*fd[:len(corenames)-1]) + db.get_temp_output(fd[-1])
+			# check if conductivity calculation was already performed
+			print "check existence ..." 
+			exists=check_file_exists(host, '%s/results/%s' % (result_folder, filenames[0]))
+			# calculate conductivity if necessary or forced
+			if not exists or args.overwrite:
+				print "calculate conductivity ..." 
+				getcondremote(host, db, filenames, result_folder, mpicmd, args.np, isodeltadb)
 	
 if __name__=="__main__":
 	main()
