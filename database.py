@@ -1099,9 +1099,12 @@ def test():
 		print worker.host, worker.mpicmd
 	
 
-def filtrate(data, dataset_names, dataset_input):
+def filtrate(data, dataset_names, dataset_input, length=None):
 	# collect all datasets with different core attributes
-	rdata=list(set([row[:len(dataset_names)-1] for row in data]))
+	if length==None:
+		rdata=list(set([row for row in data]))
+	else:
+		rdata=list(set([row[:length] for row in data]))
 
 	# filter special datasets
 	if dataset_input!=None:
@@ -1109,7 +1112,10 @@ def filtrate(data, dataset_names, dataset_input):
 		matches={}
 		i=0
 		for d,n in zip(dataset_input, dataset_names):
-			if d.find('all')==-1:
+			check=True
+			if isinstance(d, str):
+				check=(d.find('all')==-1)
+			if check:
 				if n=='material':
 					matches[i]=d
 				elif n=='N' or n=='M':
@@ -1159,7 +1165,7 @@ def main():
 	db.download()
 
 
-	rdata=filtrate(db.data, corenames, args.dataset)
+	rdata=filtrate(db.data, corenames, args.dataset, len(corenames)-1)
 
 	for rd in rdata:
 		print rd
