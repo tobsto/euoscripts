@@ -125,6 +125,14 @@ class euorun:
 
 		# get mpicmd
 		self.mpicmd=get_worker().mpicmd
+		# get name which defines the system
+		self.name=None
+		if self.material_class=='bulk':
+			self.name=self.bdb.get_output(self.material, self.ni)
+		elif self.material_class=='isolated':
+			self.name=self.idb.get_output(self.material, self.N, self.ni)
+		else:
+			self.name=self.hdb.get_output(self.material, self.N, self.M, self.ni, self.ncr, self.dW)
 		# set top output folder to current working directory by default
 		if output==None:
 			if self.material_class=='bulk':
@@ -408,7 +416,18 @@ class euorun:
 			magfile=self.output + self.idb.get_temp_output(t) + "results/avmag.dat"
 		else:
 			magfile=self.output + self.hdb.get_temp_output(t) + "results/avmag.dat"
-		return float(database.extractResultValue2ndColumn(magfile))
+		# read magnetisation file or download it (in the case of checkdatabase==True)
+		if os.path.exists(magfile):
+			return float(database.extractResultValue2ndColumn(magfile))
+		else:
+			cmd = "scp stollenw@heisenberg.physik.uni-bonn.de:/home/stollenw/projects/euo/results/%s/%s temp_magfile.dat" % (self.material_class, magfile)
+			proc = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE)
+			proc.communicate()
+			mag=float(database.extractResultValue2ndColumn("temp_magfile.dat"))
+			os.remove("temp_magfile.dat")
+			return mag
+			
+			
 
 	# find Tc temperature sweep
 	def findtc(self, temperatures=None, tsteps=None, deltaM=None):
@@ -526,6 +545,21 @@ class euorun:
 		# found tc
 		tc=tm
 
+		##############################
+		# save tc in file and upload it to database
+		##############################
+		local_file="%s/tc.dat" % self.output
+		f=open(local_file, 'w')
+		f.write("# Curie temperature of %s\n" % self.name )
+		f.write("# Magnetisation accuracy dM=%f\n" % deltaM)
+		f.write("# Temperature accuracy dT=%f\n" % tsteps[-1])
+		f.write("# Tc=%f\n" % tc)
+		f.write("%0.17e\n" % tc)
+		f.close()
+		cmd = "scp %s stollenw@heisenberg.physik.uni-bonn.de:/home/stollenw/projects/euo/results/%s/%s/" % (local_file, self.material_class, self.output)
+		proc = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE)
+		proc.communicate()
+		
 		##############################
 		# send finishing notification
 		##############################
