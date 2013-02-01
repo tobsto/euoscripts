@@ -2,6 +2,7 @@
 
 import os
 import subprocess
+import argparse
 from system_parameter import *
 
 ##############################################################################
@@ -1084,7 +1085,7 @@ def add_input (runcmd, download_path=None, path=None):
 
 	return runcmd
 			
-def main():
+def test():
 	idb=isolated_database()
 	idb.fill(('/home/stollenw/runs/runs_version-4e9912f/bgem/eugdo_n5_ni0.01/',))
 	#idb.archive()
@@ -1097,5 +1098,72 @@ def main():
 	for worker in idb.workers:
 		print worker.host, worker.mpicmd
 	
+
+def filtrate(data, dataset_names, dataset_input):
+	# collect all datasets with different core attributes
+	rdata=list(set([row[:len(dataset_names)-1] for row in data]))
+
+	# filter special datasets
+	if dataset_input!=None:
+		# parse dataset input an get matches
+		matches={}
+		i=0
+		for d,n in zip(dataset_input, dataset_names):
+			if d.find('all')==-1:
+				if n=='material':
+					matches[i]=d
+				elif n=='N' or n=='M':
+					matches[i]=int(d)
+				else:
+					matches[i]=float(d)
+			i=i+1
+	
+		# filter function
+		def filter_func(db_dataset):
+			conditions=[]
+			for index,value in matches.items():
+				conditions.append(db_dataset[index]==value)
+			return all(conditions) 
+
+		# filter special datasets
+		rdata=filter(filter_func, rdata)
+
+	# sort data
+	rdata=sorted(rdata)
+	return rdata
+
+def main():
+	parser = argparse.ArgumentParser(description='Print database defining entries without temperatures')
+	parser.add_argument('-d', '--database', help='Type of database: "bulk", "isolated" or "hetero"')
+	parser.add_argument('-s', '--dataset', nargs='*', help='Specify dataset e.g. "Metal-Metal-Heterostructure 5 9 0.01 0.01 0.125" (for material, N, M, ni, ncr and dW). You may use "all" as a placeholder or do not specify the last values e.g. "all 5 all 0.01" ')
+	args = parser.parse_args()
+
+	if not args.database in ('bulk', 'isolated', 'hetero'):
+		parser.print_help()
+		exit(0)
+
+	resultFolder='/home/stollenw/projects/euo/results/'
+	db=None
+	corenames=None
+	special=None
+	subResultFolder=None
+	if args.database=='bulk':
+		db=bulk_database()	
+		corenames=('material', 'ni', 'T')
+	elif args.database=='isolated':
+		db=isolated_database()	
+		corenames=('material', 'N', 'ni', 'T')
+	else:
+		db=heterostructure_database()	
+		corenames=('material', 'N', 'M', 'ni', 'ncr', 'dW', 'T')
+	db.download()
+
+
+	rdata=filtrate(db.data, corenames, args.dataset)
+
+	for rd in rdata:
+		print rd
+	
 if __name__=="__main__":
 	main()
+
