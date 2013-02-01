@@ -341,7 +341,7 @@ class system_parameter:
 		self.temperature        = float(extractParameter(parafilename, 'temperature'       ))
 		self.N                  =   int(extractParameter(parafilename, 'N'                 ))
 		self.N0                 =   int(extractParameter(parafilename, 'N0'                ))
-		self.Ed0                =   int(extractParameter(parafilename, 'Ed0'               ))
+		self.Ed0                = float(extractParameter(parafilename, 'Ed0'               ))
 		self.gamma              = float(extractParameter(parafilename, 'gamma'             ))
 		self.impurity           =      (extractParameter(parafilename, 'impurity'          ))
 		self.output             =      (extractParameter(parafilename, 'output'            ))
