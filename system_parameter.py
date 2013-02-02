@@ -433,7 +433,7 @@ class system_parameter:
 			if system.name==system_name:
 				return system
 
-		print "Error: System parameter class: Unknown system: %s. Break." % name
+		print "Error: System parameter class: Unknown system: %s. Break." % system_name
 		exit(1)
 
 

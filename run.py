@@ -8,9 +8,45 @@ import euorun
 import shutil
 
 def main():
-	parser = argparse.ArgumentParser(description='Run euo programm')
-	parser.add_argument('config', help='config file')
+
+	usage="""Config file can (must) contain:"
+
+	Necessary Parameter:
+	
+	system			:	System name (e.g. Bulk-EuGdO)
+	ncr			:	Charge carrier concentation in inner layers
+
+	Parameter (=Default values):
+	
+	np=1			:	Number of processes for MPI
+	M=None 			:	Number of outer material layer
+	N=1			:	Number of inner material layer
+	ncr=None		:	Charge carrier concentation in outer layers
+	dW=None			:	Work function difference
+
+	temperatures=None	:	Tuple which contains the temperatures
+	findtc=False		:	Find Tc automatically, Start with 'temperatures'
+	tsteps=None		:	List with decreasing time steps for findtc routine
+	deltaM=None		:	Magnetisation tolerance for findtc routine
+
+	output=None		:	Alternative output folder
+	input=None		:	Alternative input folder
+	initial_input=None	:	Alternative initial input
+	inputFlag=True		:	Search for suitable input
+	check_database=False	:	Check database for suitable input
+	isoDeltaFlag=True	:	Add isolated energy shifts in heterostr. case
+	updatedbFlag=True	:	Update database after successful run
+	iteration_parameter=''	:	Additional/Alternative iteration parameter
+	get_iterpara=None	:	Function which determines default iter. param.
+	log='run'		:	Name of the log files
+	verbose=True		:	Send email after every successful run
+	
+	"""
+	
+	parser = argparse.ArgumentParser(description='Run euo programm', formatter_class=argparse.RawTextHelpFormatter)
+	parser.add_argument('config', help=usage)
 	args = parser.parse_args()
+
 	# add current working directory to system path
 	sys.path.append(os.getcwd())
 	# copy config file to temporary file to avoid syntax problems
@@ -31,7 +67,7 @@ def main():
 	updatedbFlag=True
 	initial_input=None
 	iteration_parameter=''
-	get_default_iteration_parameter=None
+	get_iterpara=None
 	check_database=False
 	log='run'
 	verbose=True
@@ -45,12 +81,12 @@ def main():
 	exec('from %s import *' % cfg_name)
 	os.remove(cfg_file_name)
 	os.remove(cfg_file_name + "c")
-	#l=[np, system, N, M, ni, ncr, dW, output, input, initial_input, inputFlag, isoDeltaFlag, updatedbFlag, iteration_parameter, get_default_iteration_parameter, check_database, log, verbose, findtc, tsteps, deltaM] 
+	#l=[np, system, N, M, ni, ncr, dW, output, input, initial_input, inputFlag, isoDeltaFlag, updatedbFlag, iteration_parameter, get_iterpara, check_database, log, verbose, findtc, tsteps, deltaM] 
 	#for x in l:
 	#	print x
 
 	# init euorun class
-	erun=euorun.euorun(np, system, N, M, ni, ncr, dW, output, input, initial_input, inputFlag, isoDeltaFlag, updatedbFlag, iteration_parameter, get_default_iteration_parameter, check_database, log, verbose)
+	erun=euorun.euorun(np, system, N, M, ni, ncr, dW, output, input, initial_input, inputFlag, isoDeltaFlag, updatedbFlag, iteration_parameter, get_iterpara, check_database, log, verbose)
 
 	# run 
 	if findtc==True:
