@@ -216,7 +216,8 @@ class euorun:
 		# update database
 		if self.updatedbFlag:
 			self.write_log("* Update bulk database\n")
-			updatecmd="bulk_remote.py --no_archive %s" % runoutput
+			#updatecmd="bulk_remote.py --no_archive %s" % runoutput
+			updatecmd="bulk_remote.py %s" % runoutput
 			#subprocess.call(updatecmd, shell=True)
 			j=job.job("update remote bulk database", self.log, self.email, [updatecmd], logappend=True, verbose=False, mailcmd=self.mailcmd)
 			j.run()
@@ -253,7 +254,8 @@ class euorun:
 		# update database
 		if self.updatedbFlag:
 			self.write_log("* Update isolated database\n")
-			updatecmd="isolated_remote.py --no_archive %s" % runoutput
+			#updatecmd="isolated_remote.py --no_archive %s" % runoutput
+			updatecmd="isolated_remote.py %s" % runoutput
 			#subprocess.call(updatecmd, shell=True)
 			j=job.job("update remote isolated database", self.log, self.email, [updatecmd], logappend=True, verbose=False, mailcmd=self.mailcmd)
 			j.run()
@@ -321,7 +323,8 @@ class euorun:
 						# update database
 						self.write_log("* Update isolated database\n")
 						#print "update isolated db"
-						updatecmd_left="isolated_remote.py --no_archive  %s" % output_left
+						#updatecmd_left="isolated_remote.py --no_archive  %s" % output_left
+						updatecmd_left="isolated_remote.py %s" % output_left
 						#subprocess.call(updatecmd_left, shell=True)
 						j=job.job("update remote isolated database" , self.log, self.email, [updatecmd_left], logappend=True, verbose=False, mailcmd=self.mailcmd)
 						j.run()
@@ -348,7 +351,8 @@ class euorun:
 						# update database
 						#print "update isolated db"
 						self.write_log("* Update isolated database\n")
-						updatecmd_right="isolated_remote.py --no_archive  %s" % output_right
+						#updatecmd_right="isolated_remote.py --no_archive  %s" % output_right
+						updatecmd_right="isolated_remote.py  %s" % output_right
 						#subprocess.call(updatecmd_right, shell=True)
 						j=job.job("update remote isolated database" , self.log, self.email, [updatecmd_right], logappend=True, verbose=False, mailcmd=self.mailcmd)
 						j.run()

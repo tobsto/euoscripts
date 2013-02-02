@@ -47,7 +47,7 @@ class job:
 			process=subprocess.Popen( runcmd, shell=True, stdout=fstdout, stderr=fstderr)
 			fstdout.close()
 			fstderr.close()
-			process.wait()
+			process.communicate()
 			status=process.returncode
 		
 			# end time
