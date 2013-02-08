@@ -15,11 +15,38 @@ def read(filename, line=0):
 	return lines[line].split()
 			
 def main():
-	parser = argparse.ArgumentParser(description='Analyse euo program results')
-	keyword_help="1.) cond: calculate the temperature dependent conductivity out of the given database"
+	parser = argparse.ArgumentParser(description='Analyse euo program results', formatter_class=argparse.RawTextHelpFormatter)
+	keyword_help="""Calculate the temperature dependent 
+quantity specified by on of the following keywords
+
+print
+print full
+
+totalmag	(for bulk)
+cond		(for bulk)
+resist		(for bulk)
+
+avmag		(for isolated and heterostructures)
+cond_para	(for isolated and heterostructures)
+resist_para	(for isolated and heterostructures)
+cond_perp	(for isolated and heterostructures)
+resist_perp 	(for isolated and heterostructures)
+
+"""
+
+	dataset_help="""Specify dataset 
+	
+e.g. "Metal-Metal-Heterostructure 5 9 0.01 0.01 0.125" 
+(for material, N, M, ni, ncr and dW). 
+
+You may use "all" as a placeholder or do not specify 
+the last values e.g. "all 5 all 0.01
+
+"""
+
 	parser.add_argument('keyword', help=keyword_help)
 	parser.add_argument('-d', '--database', help='Type of database: "bulk", "isolated" or "hetero"')
-	parser.add_argument('-s', '--dataset', nargs='*', help='Specify dataset e.g. "Metal-Metal-Heterostructure 5 9 0.01 0.01 0.125" (for material, N, M, ni, ncr and dW). You may use "all" as a placeholder or do not specify the last values e.g. "all 5 all 0.01" ')
+	parser.add_argument('-s', '--dataset', nargs='*', help=dataset_help)
 	parser.add_argument('-o', '--output', default='/home/stollenw/projects/euo/analysis/', help='Output folder (optional)')
 	args = parser.parse_args()
 
@@ -35,7 +62,7 @@ def main():
 		simple_result_keywords=['cond', 'resist', 'totalmag']
 		sophisticated_result_keywords=[]
 	elif args.database=='isolated' or args.database=='hetero':
-		simple_result_keywords=['cond_perp', 'resits_perp', 'avmag']
+		simple_result_keywords=['cond_perp', 'resist_perp', 'avmag']
 		sophisticated_result_keywords=['cond_para', 'resist_para']
 
 	# keywords that produce results
