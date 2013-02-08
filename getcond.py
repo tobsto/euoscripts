@@ -29,7 +29,7 @@ def getcond(inputFolder, mpicmd, np=1, isodeltadb=False, outputFolder=None):
 		parafile=inputFolder+"/parameter.cfg"
 		(Delta_l, Delta_r)=database.get_isodeltas_from_parafile(parafile)
 		runcmd=runcmd + " --Delta_l0 %0.17e --Delta_r0 %0.17e" % (Delta_l, Delta_r)
-	print runcmd
+	#print runcmd
 	subprocess.call(runcmd, shell=True)
 
 def getcondremote(host, db, filenames, inputFolder, mpicmd, np=1, isodeltadb=False, outputFolder=None):
@@ -121,11 +121,11 @@ def main():
 		db.download()
 	
 		# get filtered data, i.e. reduce according to args.dataset (if not given, only sort)
-		filtered_data=database.filtrate(db.data, corenames, args.dataset, len(corenames))
+		filtered_data=database.filtrate(db.data, corenames, args.dataset)
 
 		for fd in filtered_data:
 			print fd
-			result_folder = top_result_folder + db.get_output(*fd[:len(corenames)-1]) + db.get_temp_output(fd[-1])
+			result_folder = fd[-1] + "/"
 			# check if conductivity calculation was already performed
 			print "check existence ..." 
 			exists=check_file_exists(host, '%s/results/%s' % (result_folder, filenames[0]))

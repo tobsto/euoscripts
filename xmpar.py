@@ -8,6 +8,7 @@ def main():
 	parser.add_argument('input', nargs='+', help='Files containing x-y data in columns')
 	parser.add_argument('-o', '--output', default='par.par', help='Output parameter file')
 	parser.add_argument('--dots', action="store_true", help='plot with dots')
+	parser.add_argument('--logscale', action="store_true", help='plot y-axis with logscale')
 	#parser.add_argument('-l', '--cut_string_left', default='', help='Prefix string that matches in all input path will be cut out')
 	#parser.add_argument('-r', '--cut_string_right', default='', help='Suffix string that matches in all input path will be cut out')
 	args = parser.parse_args()
@@ -31,6 +32,9 @@ def main():
 
 	f=open(args.output,'w')
 	f.write("title \"%s LEGEND %s\"\n" % (cut_left, cut_right))
+	if args.logscale:
+		f.write("yaxes scale Logarithmic\n")
+		f.write("autoscale\n")
 	i=0
 	for p in paths:
 		f.write("s%i legend \"%s\"\n" % (i, p[I_left:I_right]))
