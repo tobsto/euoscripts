@@ -30,7 +30,9 @@ def main():
 	if not args.dry:
 		t.write(args.database)
 		if not args.no_archive:
-			t.archive()
+			t.archive(args.archive_destination)
+	else:
+		print "Archive folder would be: ", args.archive_destination
 	
 if __name__=="__main__":
 	main()

@@ -11,7 +11,7 @@ def main():
   	parser.add_argument('-d', '--database', default='/home/stollenw/projects/euo/database/hetero.db', help='Database file name')
   	parser.add_argument('--overwrite', action='store_true', help='Overwrite database')
   	parser.add_argument('--no_archive', action='store_true', help='Do not archive results')
-  	parser.add_argument('--archive_destination', default='/home/stollenw/projects/euo/results/hetero/', help='Archive folder')
+  	parser.add_argument('--archive_destination', default='/home/stollenw/projects/euo/results/heterostructure/', help='Archive folder')
   	parser.add_argument('--dry', action='store_true', help='Simulate updating of database')
 
 	args = parser.parse_args()
@@ -29,7 +29,9 @@ def main():
 	if not args.dry:
 		t.write(args.database)
 		if not args.no_archive:
-			t.archive()
+			t.archive(args.archive_destination)
+	else:
+		print "Archive folder would be: ", args.archive_destination
 	
 if __name__=="__main__":
 	main()

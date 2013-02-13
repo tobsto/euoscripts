@@ -48,6 +48,9 @@ the last values e.g. "all 5 all 0.01
 	parser.add_argument('-d', '--database', help='Type of database: "bulk", "isolated" or "hetero"')
 	parser.add_argument('-s', '--dataset', nargs='*', help=dataset_help)
 	parser.add_argument('-o', '--output', default='/home/stollenw/projects/euo/analysis/', help='Output folder (optional)')
+	parser.add_argument('--dbpath', help='Path to database file (optional)')
+	parser.add_argument('--resultpath', default='/home/stollenw/projects/euo/results/', help='Path to results (optional)')
+	
 	args = parser.parse_args()
 
 	if not args.database in ('bulk', 'isolated', 'hetero'):
@@ -82,7 +85,6 @@ the last values e.g. "all 5 all 0.01
 	output=args.output
 	
 
-	resultFolder='/home/stollenw/projects/euo/results/'
 	db=None
 	corenames=None
 	special=None
@@ -105,7 +107,13 @@ the last values e.g. "all 5 all 0.01
 		subResultFolder='heterostructure/'
 		corenames=('material', 'N', 'M', 'ni', 'ncr', 'dW', 'T')
 		special='avmag'
-	db.download()
+
+	if args.dbpath==None:
+		db.download()
+	else:
+		db.download("stollenw@heisenberg.physik.uni-bonn.de:%s" % args.dbpath)
+
+	resultFolder=args.resultpath
 
 	# get filtered data, i.e. reduce to defining properties without temperature
 	filtered_data=database.filtrate(db.data, corenames, args.dataset, len(corenames)-1)
