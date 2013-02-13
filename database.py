@@ -997,7 +997,10 @@ def get_isodelta_info(cmd, dbpath=None):
 # with input options is then returned.
 # if no suitable input was found the database will be search and copy of a suitable
 # input folder is downloaded from the archive
-def add_input (runcmd, download_path=None, path=None):
+def add_input (runcmd, download_path=None, path=None, source=None):
+	if not source in (None, "local", "remote"):
+		print "Error: Add input: source must be: None, 'local' or 'remote', not %s. Break." % source
+		exit(1)
 	# get system parameter
 	sp=system_parameter()
 	sp.read_cmd(runcmd)
@@ -1017,7 +1020,7 @@ def add_input (runcmd, download_path=None, path=None):
 		# smaller temperatures thant 'T' 
 		foundInput=False
 		resultFolders=[]
-		if os.path.exists(path):
+		if os.path.exists(path) and (source==None or source=="local"):
 			for d in os.listdir(path):
 				folder=os.path.join(path, d)
 				if os.path.isdir(folder) and isResults(folder):
@@ -1035,7 +1038,7 @@ def add_input (runcmd, download_path=None, path=None):
 				runcmd+=" -i " + inputFolder + "/"
 
 		# no suitable input was found in local folder, check database
-		if foundInput==False and sp.get_system!=None:
+		if foundInput==False and sp.get_system!=None and (source==None or source=="remote"):
 			database=None
 			# bulk systems
 			if sp.get_system().material_class=='bulk':

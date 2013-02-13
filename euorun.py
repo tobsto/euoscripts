@@ -60,7 +60,7 @@ def get_worker():
 	exit(1)
 	
 class euorun:
-	def __init__(self, np, material, N=5, M=None, ni=0.01, ncr=None, dW=None, output=None, input=None, initial_input=None, inputFlag=True, isoDeltaFlag=True, updatedbFlag=True, iteration_parameter=None, get_default_iteration_parameter=None, check_database=False, log='run', verbose=True, email='stollenwerk@th.physik.uni-bonn.de', mailcmd='mailx -s'):
+	def __init__(self, np, material, N=5, M=None, ni=0.01, ncr=None, dW=None, output=None, input=None, initial_input=None, inputFlag=True, isoDeltaFlag=True, updatedbFlag=True, iteration_parameter=None, get_default_iteration_parameter=None, check_database=False, source=None, log='run', verbose=True, email='stollenwerk@th.physik.uni-bonn.de', mailcmd='mailx -s'):
 		# number of nodes
 		self.np=np
 		# material name
@@ -99,6 +99,8 @@ class euorun:
 	
 		# check database before a run, if it exists don't run again
 		self.check_database=check_database
+		# source for searching suitable input ('local', 'remote' or None(=both))
+		self.source=source
 		# logfile name
 		self.log=log
 		# email address
@@ -207,7 +209,7 @@ class euorun:
 		# search self.input folder for suitable input folders and add it
 		else:
 			if self.inputFlag:
-				runcmd=database.add_input(runcmd, download_path=self.output+"/download/", path=self.output)
+				runcmd=database.add_input(runcmd, download_path=self.output+"/download/", path=self.output, source=self.source)
 		# run job
 		if not self.run_exists(runcmd, runoutput, check_database=self.check_database):
 			j=job.job(runname, self.log, self.email, [runcmd], logappend=True, verbose=self.verbose, mailcmd=self.mailcmd)
@@ -244,7 +246,7 @@ class euorun:
 		# search self.input folder for suitable input folders and add it
 		else:
 			if self.inputFlag:
-				runcmd=database.add_input(runcmd, download_path=self.output+"/download/", path=self.output)
+				runcmd=database.add_input(runcmd, download_path=self.output+"/download/", path=self.output, source=self.source)
 
 		# run job
 		if not self.run_exists(runcmd, runoutput, check_database=self.check_database):
@@ -279,10 +281,10 @@ class euorun:
 		# add special input folder
 		if special_input!=None:
 			runcmd+=" -i %s" % (special_input)
-		# search self.input folder for suitable input folders and add it
+		# search self.input folder and/or remote database for suitable input folders and add it
 		else:
 			if self.inputFlag:
-				runcmd=database.add_input(runcmd, download_path=self.output+"/download/", path=self.output)
+				runcmd=database.add_input(runcmd, download_path=self.output+"/download/", path=self.output, source=self.source)
 
 		#print "check", runcmd
 		# check if run not already exist 
@@ -315,7 +317,7 @@ class euorun:
 						runoutput_left=output_left + self.idb.get_temp_output(t)
 						runcmd_left+=" -o " + runoutput_left
 						# add input if existent
-						runcmd_left=database.add_input(runcmd_left, download_path=output_left+"/download/", path=output_left)
+						runcmd_left=database.add_input(runcmd_left, download_path=output_left+"/download/", path=output_left, source=self.source)
 						# run left system
 						if not self.run_exists(runcmd_left, runoutput_left):
 							j=job.job(runname_left, self.log, self.email, [runcmd_left], logappend=True, verbose=self.verbose, mailcmd=self.mailcmd)
@@ -343,7 +345,7 @@ class euorun:
 						runoutput_right=output_right + self.idb.get_temp_output(t)
 						runcmd_right+=" -o " + runoutput_right
 						# add input if existent
-						runcmd_right=database.add_input(runcmd_right, download_path=output_right+"/download/", path=output_right)
+						runcmd_right=database.add_input(runcmd_right, download_path=output_right+"/download/", path=output_right, source=self.source)
 						# run right system
 						if not self.run_exists(runcmd_right, runoutput_right):
 							j=job.job(runname_right, self.log, self.email, [runcmd_right], logappend=True, verbose=self.verbose, mailcmd=self.mailcmd)

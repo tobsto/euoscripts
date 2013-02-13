@@ -34,6 +34,7 @@ def main():
 	initial_input=None	:	Alternative initial input
 	inputFlag=True		:	Search for suitable input
 	check_database=False	:	Check database for suitable input
+	source=None		:	Source for suitable input ('local', 'remote' or None(both))
 	isoDeltaFlag=True	:	Add isolated energy shifts in heterostr. case
 	updatedbFlag=True	:	Update database after successful run
 	iteration_parameter=''	:	Additional/Alternative iteration parameter
@@ -69,6 +70,7 @@ def main():
 	iteration_parameter=''
 	get_iterpara=None
 	check_database=False
+	source=None
 	log='run'
 	verbose=True
 	temperatures=None
@@ -81,12 +83,12 @@ def main():
 	exec('from %s import *' % cfg_name)
 	os.remove(cfg_file_name)
 	os.remove(cfg_file_name + "c")
-	#l=[np, system, N, M, ni, ncr, dW, output, input, initial_input, inputFlag, isoDeltaFlag, updatedbFlag, iteration_parameter, get_iterpara, check_database, log, verbose, findtc, tsteps, deltaM] 
+	#l=[np, system, N, M, ni, ncr, dW, output, input, initial_input, inputFlag, isoDeltaFlag, updatedbFlag, iteration_parameter, get_iterpara, check_database, source, log, verbose, findtc, tsteps, deltaM] 
 	#for x in l:
 	#	print x
 
 	# init euorun class
-	erun=euorun.euorun(np, system, N, M, ni, ncr, dW, output, input, initial_input, inputFlag, isoDeltaFlag, updatedbFlag, iteration_parameter, get_iterpara, check_database, log, verbose)
+	erun=euorun.euorun(np, system, N, M, ni, ncr, dW, output, input, initial_input, inputFlag, isoDeltaFlag, updatedbFlag, iteration_parameter, get_iterpara, check_database, source, log, verbose)
 
 	# run 
 	if findtc==True:
