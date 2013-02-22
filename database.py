@@ -106,9 +106,9 @@ def get_iteration_parameter(system_name):
 	elif system_name=='Heisenberg-Metal':
 		return ''
 	elif system_name=='EuGdO':
-		return ' --max2 5'
+		return ''
 	elif system_name=='EuGdO-Metal-Heterostructure-eta1e-4':
-		return ' --max2 5 --wru 0.01'
+		return ''
 	elif system_name=='HeisenbergMetal-Metal-Heterostructure':
 		return ''
 	elif system_name=='Metal-Metal-Heterostructure':

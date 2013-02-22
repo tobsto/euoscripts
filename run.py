@@ -14,7 +14,7 @@ def main():
 	Necessary Parameter:
 	
 	system			:	System name (e.g. Bulk-EuGdO)
-	ncr			:	Charge carrier concentation in inner layers
+	ni			:	Charge carrier concentation in inner layers
 
 	Parameter (=Default values):
 	
