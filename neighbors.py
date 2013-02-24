@@ -7,6 +7,7 @@ import math
 parser = argparse.ArgumentParser(description='Calculate nearest neighbors in a plane of an fcc lattice')
 parser.add_argument('-l', '--lattice', help='Lattice type')
 parser.add_argument('-N', '--distance', default=2, help='Maximum distance', type=int)
+parser.add_argument('--cfile', help='Filename for c++ source code')
 parser.add_argument('--flag3d', action='store_true', help='3d')
 args = parser.parse_args()
 
@@ -111,6 +112,12 @@ def neighbors(lattice, flag3d):
 		count=count+1
 	return data
 
+def writeCCode(outfile, data, flag3d, scale):
+	f=open(outfile, 'w')
+	for count, d, N, reduced_coordinates in data:
+		f.write("\t\trnn[%i]=sqrt(%f/%f);\n" % (count-1, d,scale))
+		f.write("\t\twnn[%i]=%i;\n" % (count-1, N))
+
 def show(data, flag3d, scale):
 	print "Order\t4*D^2\tD\tNN\tCoordinates"
 	for count, d, N, reduced_coordinates in data:
@@ -134,6 +141,9 @@ def main():
 	data=neighbors(lattice, args.flag3d)
 	# print results
 	show(data, args.flag3d, scale)
+	# save c++ source code
+	if args.cfile!=None:
+		writeCCode(args.cfile, data, args.flag3d, scale)
 	
 if __name__=="__main__":
 	main()
