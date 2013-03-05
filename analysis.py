@@ -17,7 +17,7 @@ def read(filename, line=0):
 def main():
 	parser = argparse.ArgumentParser(description='Analyse euo program results', formatter_class=argparse.RawTextHelpFormatter)
 	keyword_help="""Calculate the temperature dependent 
-quantity specified by on of the following keywords
+quantity specified by one of the following keywords
 
 print
 print full
@@ -31,6 +31,7 @@ cond_para	(for isolated and heterostructures)
 resist_para	(for isolated and heterostructures)
 cond_perp	(for isolated and heterostructures)
 resist_perp 	(for isolated and heterostructures)
+isodelta 	(energy shift (-mu) for isolated systems)
 
 """
 
@@ -66,7 +67,7 @@ the last values e.g. "all 5 all 0.01
 		sophisticated_result_keywords=[]
 	elif args.database=='isolated' or args.database=='hetero':
 		simple_result_keywords=['cond_perp', 'resist_perp', 'avmag']
-		sophisticated_result_keywords=['cond_para', 'resist_para']
+		sophisticated_result_keywords=['cond_para', 'resist_para', 'isodelta']
 
 	# keywords that produce results
 	result_keywords=simple_result_keywords + sophisticated_result_keywords
@@ -170,6 +171,19 @@ the last values e.g. "all 5 all 0.01
 					temp=td[len(corenames)-1]
 					f.write("%0.17e\t%0.17e\n" % (temp, value))
 				f.close()
+
+			if args.keyword=='isodelta':
+				outfile="%s/%s_%s.dat" % (suboutput, args.keyword, namestr)
+				f=open(outfile, 'w')
+				for td in temperature_datasets:
+					temperature_folder=db.get_temp_output(td[len(corenames)-1])
+					filename="%s/%s/%s/%s/results/%s.dat" % (resultFolder, subResultFolder, material_folder, temperature_folder, 'mu')
+					mu=float(read(filename, line=0)[0])
+					isodelta=-mu
+					temp=td[len(corenames)-1]
+					f.write("%0.17e\t%0.17e\n" % (temp, isodelta))
+				f.close()
+
 
 		elif args.keyword=='print':
 			print 'Temperature\t%s' % special
