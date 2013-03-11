@@ -209,7 +209,7 @@ class euorun:
 		# search self.input folder for suitable input folders and add it
 		else:
 			if self.inputFlag:
-				runcmd=database.add_input(runcmd, download_path=self.output+"/download/", path=self.output, source=self.source)
+				runcmd=database.add_input(runcmd, download_path=self.output+"/download/", path=self.input, source=self.source)
 		# run job
 		if not self.run_exists(runcmd, runoutput, check_database=self.check_database):
 			j=job.job(runname, self.log, self.email, [runcmd], logappend=True, verbose=self.verbose, mailcmd=self.mailcmd)
@@ -246,7 +246,7 @@ class euorun:
 		# search self.input folder for suitable input folders and add it
 		else:
 			if self.inputFlag:
-				runcmd=database.add_input(runcmd, download_path=self.output+"/download/", path=self.output, source=self.source)
+				runcmd=database.add_input(runcmd, download_path=self.output+"/download/", path=self.input, source=self.source)
 
 		# run job
 		if not self.run_exists(runcmd, runoutput, check_database=self.check_database):
@@ -284,7 +284,7 @@ class euorun:
 		# search self.input folder and/or remote database for suitable input folders and add it
 		else:
 			if self.inputFlag:
-				runcmd=database.add_input(runcmd, download_path=self.output+"/download/", path=self.output, source=self.source)
+				runcmd=database.add_input(runcmd, download_path=self.output+"/download/", path=self.input, source=self.source)
 
 		#print "check", runcmd
 		# check if run not already exist 
@@ -297,9 +297,6 @@ class euorun:
 				#print "check isodeltas:",  database.get_isodelta_info(runcmd)
 				self.write_log("* Check isolated deltas: %s, %s, %s, %s, %s, %s, %s, %s\n"  % (database.get_isodelta_info(runcmd)[:-1]))
 				(exists_left, material_left, N_left, nc_left, exists_right, material_right, N_right, nc_right, temp)=database.get_isodelta_info(runcmd)
-				if t!=temp:
-					print "Error: run_hetero: Temperatures do not match. This should not happen. Break." 
-					exit(1)
 
 				# if not start isolated runs
 				if not exists_left or not exists_right:
