@@ -66,8 +66,8 @@ the last values e.g. "all 5 all 0.01
 		simple_result_keywords=['cond', 'resist', 'totalmag']
 		sophisticated_result_keywords=[]
 	elif args.database=='isolated' or args.database=='hetero':
-		simple_result_keywords=['cond_perp', 'resist_perp', 'avmag']
-		sophisticated_result_keywords=['cond_para', 'resist_para', 'isodelta']
+		simple_result_keywords=['avmag']
+		sophisticated_result_keywords=['cond_para', 'resist_para', 'cond_perp', 'resist_perp', 'isodelta']
 
 	# keywords that produce results
 	result_keywords=simple_result_keywords + sophisticated_result_keywords
@@ -168,6 +168,29 @@ the last values e.g. "all 5 all 0.01
 					temperature_folder=db.get_temp_output(td[len(corenames)-1])
 					filename="%s/%s/%s/%s/results/%s.dat" % (resultFolder, subResultFolder, material_folder, temperature_folder, 'resist')
 					value=float(read(filename, line=0)[1])
+					temp=td[len(corenames)-1]
+					f.write("%0.17e\t%0.17e\n" % (temp, value))
+				f.close()
+
+
+			if args.keyword=='cond_perp':
+				outfile="%s/%s_%s.dat" % (suboutput, args.keyword, namestr)
+				f=open(outfile, 'w')
+				for td in temperature_datasets:
+					temperature_folder=db.get_temp_output(td[len(corenames)-1])
+					filename="%s/%s/%s/%s/results/%s.dat" % (resultFolder, subResultFolder, material_folder, temperature_folder, 'cond_perp')
+					value=float(read(filename, line=0)[0])
+					temp=td[len(corenames)-1]
+					f.write("%0.17e\t%0.17e\n" % (temp, value))
+				f.close()
+
+			if args.keyword=='resist_perp':
+				outfile="%s/%s_%s.dat" % (suboutput, args.keyword, namestr)
+				f=open(outfile, 'w')
+				for td in temperature_datasets:
+					temperature_folder=db.get_temp_output(td[len(corenames)-1])
+					filename="%s/%s/%s/%s/results/%s.dat" % (resultFolder, subResultFolder, material_folder, temperature_folder, 'resist_perp')
+					value=float(read(filename, line=0)[0])
 					temp=td[len(corenames)-1]
 					f.write("%0.17e\t%0.17e\n" % (temp, value))
 				f.close()
