@@ -56,6 +56,7 @@ def main():
 	parser.add_argument('--J4f', help='Spin-coupling', type=float)
 	parser.add_argument('--Jcf', help='Spin-conduction-band-spin-coupling', type=float)
 	parser.add_argument('-o','--output', help='output folder (optional)')
+	parser.add_argument('-m','--cmag', help='file with conduction band magnetisation (optional)')
 	args = parser.parse_args()
 
 	output=get_output(args.N, args.J4f, args.Jcf)
@@ -65,7 +66,7 @@ def main():
 	if os.path.exists(output):
 		shutil.rmtree(output)
 	os.makedirs(output)
-	run_args=(args.N, output, args.no_mirror, args.longrange, args.J4f, args.Jcf)
+	run_args=(args.N, output, args.no_mirror, args.longrange, args.J4f, args.Jcf, args.cmag)
 	get_mag_args=(output,)
 	tc=findtc.findtc(run_heisenberg, get_mag_heisenberg, run_args, run_args, get_mag_args)
 	
