@@ -66,15 +66,15 @@ workers.append(worker(	'heisenberg',
 workers.append(worker(	'agem.th.physik.uni-bonn.de',
 			'/home/stollenw/runs/',
 			'/users/stollenw/runs/',
-			'mpirun'))
+			'mpirun --hostfile /users/stollenw/runs/hostfile_agem'))
 workers.append(worker(	'bgem.th.physik.uni-bonn.de',
 			'/home/stollenw/runs/',
 			'/users/stollenw/runs/',
-			'mpirun'))
+			'mpirun --hostfile /users/stollenw/runs/hostfile_bgem'))
 workers.append(worker(	'cgem.th.physik.uni-bonn.de',
 			'/home/stollenw/runs/',
 			'/users/stollenw/runs/',
-			'mpirun'))
+			'mpirun --hostfile /users/stollenw/runs/hostfile_cgem'))
 workers.append(worker(	'stgeorgenamreith',
 			'/home/stollenw/runs/',
 			'/users/stollenw/runs/',
