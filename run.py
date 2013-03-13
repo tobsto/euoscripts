@@ -41,6 +41,7 @@ def main():
 	get_iterpara=None	:	Function which determines default iter. param.
 	log='run'		:	Name of the log files
 	verbose=True		:	Send email after every successful run
+	email=sto..@th.phys..	:	Alternative email address
 	
 	"""
 	
@@ -77,6 +78,8 @@ def main():
 	findtc=False
 	tsteps=None
 	deltaM=None
+	email="stollenwerk@th.physik.uni-bonn.de"
+	#email="tobsto@zoho.com"
 
 	# import parameter from file
 	##exec('from %s import *' % cfg_name) in globals(), locals()
@@ -88,7 +91,7 @@ def main():
 	#	print x
 
 	# init euorun class
-	erun=euorun.euorun(np, system, N, M, ni, ncr, dW, output, input, initial_input, inputFlag, isoDeltaFlag, updatedbFlag, iteration_parameter, get_iterpara, check_database, source, log, verbose)
+	erun=euorun.euorun(np, system, N, M, ni, ncr, dW, output, input, initial_input, inputFlag, isoDeltaFlag, updatedbFlag, iteration_parameter, get_iterpara, check_database, source, log, verbose, email)
 
 	# run 
 	if findtc==True:
