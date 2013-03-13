@@ -212,6 +212,23 @@ negative={}
 negative['N0']=0
 physical_systems.append(physical_system (name, material_class, positive, negative, (left,right)))
 
+####################################################################
+### Bulk materials with long range RKKY coupling
+####################################################################
+# EuGdO (leave value of Jcf open for testing purposed)
+name='Bulk-EuGdO-TestJcf'
+material_class='bulk'
+positive={}
+positive['N']=1
+positive['N0']=0
+positive['impurity']='Gd'
+positive['ncc_gad']=0.9952
+positive['eta']=1E-9
+positive['longrange']=True
+positive.update(common_positive)
+negative={}
+physical_systems.append(physical_system (name, material_class, positive, negative))
+
 ############################################
 # extract options from run command string
 ############################################
@@ -334,6 +351,9 @@ class system_parameter:
 		self.twod                =    option_exists(runcmd, ('--2d',))
 		self.verbose             =    option_exists(runcmd, ('--verbose',))
 		self.no_cleaning         =    option_exists(runcmd, ('--no_cleaning',))
+		self.longrange           =    option_exists(runcmd, ('--longrange',))
+		if (self.longrange):
+			self.Rmax        = float(get_option(runcmd, ('--Rmax',),                              2.0))
 
 	# read in parameter file and map this onto a material class.
 	def read_file(self, parafilename):
@@ -399,6 +419,11 @@ class system_parameter:
 		self.no_cleaning=False
 		if parameterExists(parafilename, 'no_cleaning'):
 			self.no_cleaning=True
+		self.longrange=False
+		self.Rmax=2.0
+		if parameterExists(parafilename, 'longrange'):
+			self.longrange = True
+			self.Rmax      = float(extractParameter(parafilename, 'Rmax'              ))
 
 	def match(self, key, value):
 		saved_value=eval('self.%s' % key)
@@ -415,12 +440,14 @@ class system_parameter:
 			for key,value in system.positive.items():
 				match=self.match(key,value)
 				if match==False:
+					#print "\t%s=%s does not match" % (key,value)
 					break
 			#print "%s (negative):" % system.name
 			notmatch=True
 			for key,value in system.negative.items():
 				notmatch= not self.match(key,value)
 				if notmatch==False:
+					#print "\t%s=%s does not match" % (key,value)
 					break
 
 			if match and notmatch:
@@ -519,9 +546,10 @@ class system_parameter:
 
 def main():
 	sp=system_parameter()
-	cmd="mpirun -np 4 euo.out -s -m 2 -n 5 --n_cr 1.0 --eta 1E-4"
+	cmd="mpirun --hostfile /users/stollenw/runs/hostfile_bgem -np 64 euo.out --N 1 --N0 0 --longrange --impurity Gd --eta 1e-09 --ncc_gad 0.9952 -x 4.000000e-02 -t 1.200000e+02 --wrs 0.05 --max2 0 --max2_end 5 --Jcf 0.03000 --Rmax 10.0 --max1 5000 -o Bulk-EuGdO-TestJcf_ni0.0400_Jcf0.03000_Rmax10.00/t120.000// -i /users/stollenw/runs/runs_version-8812385/bgem/Bulk-EuGdO_ni0.0400/t120.000/"
+	#cmd="mpirun -np 4 euo.out -s -m 2 -n 5 --n_cr 1.0 --eta 1E-4"
 	sp.read_cmd(cmd)
-	sp.get_system()
+	print sp.get_system().name
 
 	
 
