@@ -178,10 +178,13 @@ class euorun:
 		if os.path.exists("%s/parameter.cfg" % output):
 			sp1=system_parameter.system_parameter()
 			sp1.read_file("%s/parameter.cfg" % output)
-			sp2=system_parameter.system_parameter()
-			sp2.read_cmd(runcmd)
-			results_exists=os.path.exists("%s/results" % output)
-			return system_equal(sp1, sp2) and results_exists
+			if sp1.get_system()==None:
+				return False
+			else:
+				sp2=system_parameter.system_parameter()
+				sp2.read_cmd(runcmd)
+				results_exists=os.path.exists("%s/results" % output)
+				return system_equal(sp1, sp2) and results_exists
 		elif check_database:
 			sp=system_parameter.system_parameter()
 			sp.read_cmd(runcmd)
