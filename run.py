@@ -35,7 +35,9 @@ def main():
 	initial_input=None	:	Alternative initial input
 	inputFlag=True		:	Search for suitable input
 	check_database=False	:	Check database for suitable input
-	source=None		:	Source for suitable input ('local', 'remote' or None(both))
+	source=None		:	Source for suitable input 
+					('local', 'remote', None(both), 'local-remote'
+					 or 'remote-local'. The latter prefers remote over local input)
 	input_system_name=None	:	Alternative input system (only relevant if source!=local)	
 	isoDeltaFlag=True	:	Add isolated energy shifts in heterostr. case
 	updatedbFlag=True	:	Update database after successful run
