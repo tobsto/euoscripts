@@ -229,6 +229,113 @@ positive.update(common_positive)
 negative={}
 physical_systems.append(physical_system (name, material_class, positive, negative))
 
+# EuGdO with long range (LR) coupling
+name='Bulk-EuGdO-LR'
+material_class='bulk'
+positive={}
+positive['N']=1
+positive['N0']=0
+positive['impurity']='Gd'
+positive['ncc_gad']=0.9952
+positive['Jcf']=0.0435
+positive['Rmax']=4
+positive['eta']=1E-9
+positive['longrange']=True
+positive.update(common_positive)
+negative={}
+physical_systems.append(physical_system (name, material_class, positive, negative))
+
+# bulk heisenberg-metal with long range RKKY coupling
+name='Bulk-Heisenberg-Metal-LR'
+material_class='bulk'
+positive={}
+positive['N']=1
+positive['N0']=0
+positive['impurity']='None'
+positive['Jcf']=0.0435
+positive['Rmax']=4
+positive['eta']=0.0
+positive['longrange']=True
+positive.update(common_positive)
+negative={}
+physical_systems.append(physical_system (name, material_class, positive, negative))
+
+####################################################################
+### Isolated materials with long range RKKY coupling
+####################################################################
+
+# heisenberg-metal with long range RKKY coupling
+name='Heisenberg-Metal-LR'
+material_class='isolated'
+positive={}
+positive['N0']=0
+positive['impurity']='None'
+positive['Jcf']=0.0435
+positive['Rmax']=4
+positive['eta']=0.0
+positive['mirror']=True
+positive['longrange']=True
+positive.update(common_positive)
+negative={}
+physical_systems.append(physical_system (name, material_class, positive, negative))
+
+# EuGdO with long range RKKY coupling
+name='EuGdO-LR'
+material_class='isolated'
+positive={}
+positive['N0']=0
+positive['impurity']='Gd'
+positive['ncc_gad']=0.9952
+positive['Jcf']=0.0435
+positive['Rmax']=4
+positive['eta']=1E-9
+positive['mirror']=True
+positive['longrange']=True
+positive.update(common_positive)
+negative={}
+physical_systems.append(physical_system (name, material_class, positive, negative))
+
+####################################################################
+### Heterostructure materials with long range RKKY coupling
+####################################################################
+
+# EuGdO-Metal-Heterostructure with long range RKKY coupling
+name='EuGdO-Metal-Heterostructure-eta1e-4-LR'
+material_class='heterostructure'
+left='EuGdO-LR'
+right='Metal'
+positive={}
+positive['impurity']='Gd'
+positive['ncc_gad']=0.9952
+positive['Jcf']=0.0435
+positive['Rmax']=4
+positive['eta']=1E-4
+positive['mirror']=True
+positive['insulator']=False
+positive['longrange']=True
+positive.update(common_positive)
+negative={}
+negative['N0']=0
+physical_systems.append(physical_system (name, material_class, positive, negative, (left,right)))
+
+# HeisenbergMetal-Metal-Heterostructure with long range RKKY coupling
+name='HeisenbergMetal-Metal-Heterostructure-LR'
+material_class='heterostructure'
+left='Heisenberg-Metal-LR'
+right='Metal'
+positive={}
+positive['impurity']='None'
+positive['Jcf']=0.0435
+positive['Rmax']=4
+positive['eta']=0.0
+positive['mirror']=True
+positive['insulator']=False
+positive['longrange']=True
+positive.update(common_positive)
+negative={}
+negative['N0']=0
+physical_systems.append(physical_system (name, material_class, positive, negative, (left,right)))
+
 ############################################
 # extract options from run command string
 ############################################
@@ -544,6 +651,22 @@ class system_parameter:
 		print "Error: System parameter class: Unknown system: %s. Break." % name
 		exit(1)
 
+	def print_physical_systems(self):
+		for system in self.physical_systems:
+			print "###########################################"
+			print system.name
+			print "###########################################"
+			print "\tMaterial class: ", system.material_class
+			print ""
+			print "\tAttributes:"
+			for (key, value) in system.positive.items():
+				if not key in common_positive:
+					print '\t\t'+'{0: <10}'.format(key)+'\t{0: <10}'.format(value)
+			print ""
+			print "\tNegated Attributes:"
+			for (key, value) in system.negative.items():
+				print "\t\t", key,"\t", value
+			print ""
 def main():
 	sp=system_parameter()
 	cmd="mpirun --hostfile /users/stollenw/runs/hostfile_bgem -np 64 euo.out --N 1 --N0 0 --longrange --impurity Gd --eta 1e-09 --ncc_gad 0.9952 -x 4.000000e-02 -t 1.200000e+02 --wrs 0.05 --max2 0 --max2_end 5 --Jcf 0.03000 --Rmax 10.0 --max1 5000 -o Bulk-EuGdO-TestJcf_ni0.0400_Jcf0.03000_Rmax10.00/t120.000// -i /users/stollenw/runs/runs_version-8812385/bgem/Bulk-EuGdO_ni0.0400/t120.000/"

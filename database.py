@@ -997,7 +997,7 @@ def get_isodelta_info(cmd, dbpath=None):
 # with input options is then returned.
 # if no suitable input was found the database will be search and copy of a suitable
 # input folder is downloaded from the archive
-def add_input (runcmd, download_path=None, path=None, source=None):
+def add_input (runcmd, download_path=None, path=None, source=None, input_system_name=None):
 	if not source in (None, "local", "remote"):
 		print "Error: Add input: source must be: None, 'local' or 'remote', not %s. Break." % source
 		exit(1)
@@ -1039,6 +1039,9 @@ def add_input (runcmd, download_path=None, path=None, source=None):
 
 		# no suitable input was found in local folder, check database
 		if foundInput==False and sp.get_system!=None and (source==None or source=="remote"):
+			# physical system which serves as input
+			if input_system_name==None:
+				input_system_name=sp.get_system().name
 			database=None
 			# bulk systems
 			if sp.get_system().material_class=='bulk':
@@ -1046,13 +1049,13 @@ def add_input (runcmd, download_path=None, path=None, source=None):
 				database.download()
 				# find a folder with lower temperature than T
 				tmax=0.0
-				for d in sorted(filter(lambda element : element[0] == sp.get_system().name and element[1] == sp.concentration, database.data), key= lambda element: element[2]):
+				for d in sorted(filter(lambda element : element[0] == input_system_name and element[1] == sp.concentration, database.data), key= lambda element: element[2]):
 					t=d[2]
 					if t>tmax and t<=T:
 						tmax=t
 
 				if tmax>0.0:
-					inputFolder=database.download_results(sp.get_system().name, sp.concentration, tmax, download_path)
+					inputFolder=database.download_results(input_system_name, sp.concentration, tmax, download_path)
 					runcmd+=" -i " + inputFolder + "/"
 
 
@@ -1062,13 +1065,13 @@ def add_input (runcmd, download_path=None, path=None, source=None):
 				database.download()
 				# find a folder with lower temperature than T
 				tmax=0.0
-				for d in sorted(filter(lambda element : element[0] == sp.get_system().name and element[1] == sp.N and element[2] == sp.concentration, database.data), key= lambda element: element[3]):
+				for d in sorted(filter(lambda element : element[0] == input_system_name and element[1] == sp.N and element[2] == sp.concentration, database.data), key= lambda element: element[3]):
 					t=d[3]
 					if t>tmax and t<=T:
 						tmax=t
 
 				if tmax>0.0:
-					inputFolder=database.download_results(sp.get_system().name, sp.N, sp.concentration, tmax, download_path)
+					inputFolder=database.download_results(input_system_name, sp.N, sp.concentration, tmax, download_path)
 					runcmd+=" -i " + inputFolder + "/"
 
 			# heterostructures
@@ -1077,13 +1080,13 @@ def add_input (runcmd, download_path=None, path=None, source=None):
 				database.download()
 				# find a folder with lower temperature than T
 				tmax=0.0
-				for d in sorted(filter(lambda element : element[0] == sp.get_system().name and element[1] == sp.N and element[2] == sp.N0 and element[3] == sp.concentration and element[4] == sp.n_cr and element[5] == sp.Delta_W, database.data), key= lambda element: element[6]):
+				for d in sorted(filter(lambda element : element[0] == input_system_name and element[1] == sp.N and element[2] == sp.N0 and element[3] == sp.concentration and element[4] == sp.n_cr and element[5] == sp.Delta_W, database.data), key= lambda element: element[6]):
 					t=d[6]
 					if t>tmax and t<=T:
 						tmax=t
 
 				if tmax>0.0:
-					inputFolder=database.download_results(sp.get_system().name, sp.N, sp.N0, sp.concentration, sp.n_cr, sp.Delta_W, tmax, download_path)
+					inputFolder=database.download_results(input_system_name, sp.N, sp.N0, sp.concentration, sp.n_cr, sp.Delta_W, tmax, download_path)
 					runcmd+=" -i " + inputFolder + "/"
 
 	return runcmd

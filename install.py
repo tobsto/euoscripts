@@ -2,7 +2,7 @@
 
 import subprocess
 
-programms=['job.py', 'system_parameter.py', 'database.py', 'euorun.py', 'run.py', 'bulk_remote.py','bulk_update.py', 'bulk_print.py', 'isolated_remote.py','isolated_update.py', 'isolated_print.py', 'heterostructure_remote.py','heterostructure_update.py', 'heterostructure_print.py', 'get_total_magnetisation.py', 'reflect.py', 'xmpar.py', 'plot3d.py', 'getcond.py', 'analysis.py', 'mkplot.py', 'compare_databases.py', 'neighbors.py', 'heisenberg.py', 'findtc.py', 'tcplot.py']
+programms=['job.py', 'system_parameter.py', 'database.py', 'euorun.py', 'run.py', 'bulk_remote.py','bulk_update.py', 'bulk_print.py', 'isolated_remote.py','isolated_update.py', 'isolated_print.py', 'heterostructure_remote.py','heterostructure_update.py', 'heterostructure_print.py', 'get_total_magnetisation.py', 'reflect.py', 'xmpar.py', 'plot3d.py', 'getcond.py', 'analysis.py', 'mkplot.py', 'compare_databases.py', 'neighbors.py', 'heisenberg.py', 'findtc.py', 'tcplot.py', 'cleanResults.py', 'cleanTrash.py']
 
 destinations=['/home/stollenw/Sonstiges/Programme/bin','/mnt/stollenw/sonstiges/local/python', '/mnt/dhome/programms/bin']
 #destinations=['/home/stollenw/Sonstiges/Programme/bin']

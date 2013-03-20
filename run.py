@@ -5,6 +5,7 @@ import sys
 import os
 import argparse
 import euorun
+import system_parameter
 import shutil
 
 def main():
@@ -13,7 +14,7 @@ def main():
 
 	Necessary Parameter:
 	
-	system			:	System name (e.g. Bulk-EuGdO)
+	system			:	System name (e.g. Bulk-EuGdO, see 'run.py list')
 	ni			:	Charge carrier concentation in inner layers
 
 	Parameter (=Default values):
@@ -35,6 +36,7 @@ def main():
 	inputFlag=True		:	Search for suitable input
 	check_database=False	:	Check database for suitable input
 	source=None		:	Source for suitable input ('local', 'remote' or None(both))
+	input_system_name=None	:	Alternative input system (only relevant if source!=local)	
 	isoDeltaFlag=True	:	Add isolated energy shifts in heterostr. case
 	updatedbFlag=True	:	Update database after successful run
 	iteration_parameter=''	:	Additional/Alternative iteration parameter
@@ -42,12 +44,19 @@ def main():
 	log='run'		:	Name of the log files
 	verbose=True		:	Send email after every successful run
 	email=sto..@th.phys..	:	Alternative email address
+
+	Note: Type run.py list for a list of available system types.
 	
 	"""
 	
 	parser = argparse.ArgumentParser(description='Run euo programm', formatter_class=argparse.RawTextHelpFormatter)
 	parser.add_argument('config', help=usage)
 	args = parser.parse_args()
+
+	if (args.config=='list'):
+		sp=system_parameter.system_parameter()
+		sp.print_physical_systems()
+		exit(0)
 
 	# add current working directory to system path
 	sys.path.append(os.getcwd())
@@ -72,6 +81,7 @@ def main():
 	get_iterpara=None
 	check_database=False
 	source=None
+	input_system_name=None
 	log='run'
 	verbose=True
 	temperatures=None
@@ -91,7 +101,7 @@ def main():
 	#	print x
 
 	# init euorun class
-	erun=euorun.euorun(np, system, N, M, ni, ncr, dW, output, input, initial_input, inputFlag, isoDeltaFlag, updatedbFlag, iteration_parameter, get_iterpara, check_database, source, log, verbose, email)
+	erun=euorun.euorun(np, system, N, M, ni, ncr, dW, output, input, initial_input, inputFlag, isoDeltaFlag, updatedbFlag, iteration_parameter, get_iterpara, check_database, source, input_system_name, log, verbose, email)
 
 	# run 
 	if findtc==True:
