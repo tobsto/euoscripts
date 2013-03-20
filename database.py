@@ -118,6 +118,50 @@ def get_iteration_parameter(system_name):
 		#print "Error: get iteration parameter. Unknow system name: %s. Break." % system_name
 		#exit(1)
 
+
+##################################
+## database filter function
+##################################
+def filtrate(data, dataset_names, dataset_input, length=None):
+	# collect all datasets with different core attributes
+	if length==None:
+		rdata=list(set([row for row in data]))
+	else:
+		rdata=list(set([row[:length] for row in data]))
+
+	# filter special datasets
+	if dataset_input!=None:
+		# parse dataset input an get matches
+		matches={}
+		i=0
+		for d,n in zip(dataset_input, dataset_names):
+			check=True
+			if isinstance(d, str):
+				check=(d.find('all')==-1)
+			if check:
+				if n=='material' or n=='origin':
+					matches[i]=d
+				elif n=='N' or n=='M':
+					matches[i]=int(d)
+				else:
+					matches[i]=float(d)
+			i=i+1
+	
+		# filter function
+		def filter_func(db_dataset):
+			conditions=[]
+			for index,value in matches.items():
+				conditions.append(db_dataset[index]==value)
+			return all(conditions) 
+
+		# filter special datasets
+		rdata=filter(filter_func, rdata)
+
+	# sort data
+	rdata=sorted(rdata)
+	return rdata
+
+
 ###############################################
 # Database for bulk results
 ###############################################
@@ -257,10 +301,17 @@ class bulk_database:
 	def get_temp_output(self, t):
 			return "t%07.3f/" % t
 	# archive results
-	def archive(self, dest='/home/stollenw/projects/euo/results/bulk/'):
+	def archive(self, dest='/home/stollenw/projects/euo/results/bulk/', dataset=None, special_path=None):
 		if not os.path.exists(dest):
 			os.makedirs(dest)
-		for d in self.data:
+		# get filtered data, i.e. reduce to defining properties given by the dataset argument
+		corenames=('material', 'ni', 'T', 'totalmag', 'origin')
+		filtered_data=filtrate(self.data, corenames, dataset)
+		if special_path!=None:	
+			sdset=['all', 'all', 'all', 'all', special_path]
+			filtered_data=filtrate(self.data, corenames, sdset)
+		#for d in self.data:
+		for d in filtered_data:
 			print "archive", d 
 			dest_path=dest + self.get_output(d[0], d[1])
 			if not os.path.exists(dest_path):
@@ -468,10 +519,17 @@ class isolated_database:
 	def get_temp_output(self, t):
 			return "t%07.3f/" % t
 	# archive results
-	def archive(self, dest='/home/stollenw/projects/euo/results/isolated/'):
+	def archive(self, dest='/home/stollenw/projects/euo/results/isolated/', dataset=None, special_path=None):
 		if not os.path.exists(dest):
 			os.makedirs(dest)
-		for d in self.data:
+		# get filtered data, i.e. reduce to defining properties given by the dataset argument
+		corenames=('material', 'N', 'ni', 'T', 'isodelta', 'origin' )
+		filtered_data=filtrate(self.data, corenames, dataset)
+		if special_path!=None:	
+			sdset=['all', 'all', 'all', 'all', 'all', special_path]
+			filtered_data=filtrate(self.data, corenames, sdset)
+		#for d in self.data:
+		for d in filtered_data:
 			print "archive", d 
 			dest_path=dest + self.get_output(d[0], d[1], d[2])
 			if not os.path.exists(dest_path):
@@ -680,10 +738,17 @@ class heterostructure_database:
 	def get_temp_output(self, t):
 			return "t%07.3f/" % t
 	# archive results
-	def archive(self, dest='/home/stollenw/projects/euo/results/heterostructure/'):
+	def archive(self, dest='/home/stollenw/projects/euo/results/heterostructure/', dataset=None, special_path=None):
 		if not os.path.exists(dest):
 			os.makedirs(dest)
-		for d in self.data:
+		# get filtered data, i.e. reduce to defining properties given by the dataset argument
+		corenames=('material', 'N', 'M', 'ni', 'ncr', 'dW', 'T', 'avmag', 'origin')
+		filtered_data=filtrate(self.data, corenames, dataset)
+		if special_path!=None:	
+			sdset=['all', 'all', 'all', 'all', 'all', 'all', 'all', 'all', special_path]
+			filtered_data=filtrate(self.data, corenames, sdset)
+		#for d in self.data:
+		for d in filtered_data:
 			print "archive", d 
 			dest_path=dest + self.get_output(d[0], d[1], d[2], d[3], d[4], d[5])
 			if not os.path.exists(dest_path):
@@ -691,15 +756,20 @@ class heterostructure_database:
 			dest_temp_path=dest_path + self.get_temp_output(d[6])
 			if not os.path.exists(dest_temp_path):
 				os.mkdir(dest_temp_path)
-			cmd="rsync -avztq %s %s" % ("%s/parameter.cfg" % d[8], dest_temp_path)
-			subprocess.call(cmd, shell=True)
-			cmd="rsync -avztq %s %s" % ("%s/source" % d[8], dest_temp_path)
-			subprocess.call(cmd, shell=True)
-			cmd="rsync -avztq %s %s" % ("%s/results" % d[8], dest_temp_path)
-			subprocess.call(cmd, shell=True)
-			f=open("%s/origin.txt" % dest_temp_path, 'w')
-			f.write("%s\n" % d[8])
-			f.close()
+			try:
+				cmd="rsync -avztq %s %s" % ("%s/parameter.cfg" % d[8], dest_temp_path)
+				subprocess.call(cmd, shell=True)
+				cmd="rsync -avztq %s %s" % ("%s/source" % d[8], dest_temp_path)
+				subprocess.call(cmd, shell=True)
+				cmd="rsync -avztq %s %s" % ("%s/results" % d[8], dest_temp_path)
+				subprocess.call(cmd, shell=True)
+				f=open("%s/origin.txt" % dest_temp_path, 'w')
+				f.write("%s\n" % d[8])
+				f.close()
+			except:
+				print 'Error: Failed to archive: %s' % d[5]
+				print 'Break.'
+				exit(1)
 
 	def download_results(self, material, N, M, ni, ncr, dW, T, dest, source='stollenw@heisenberg.physik.uni-bonn.de:/home/stollenw/projects/euo/results/heterostructure/'):
 		for d in self.data:
@@ -1155,45 +1225,6 @@ def test():
 	for worker in idb.workers:
 		print worker.host, worker.mpicmd
 	
-
-def filtrate(data, dataset_names, dataset_input, length=None):
-	# collect all datasets with different core attributes
-	if length==None:
-		rdata=list(set([row for row in data]))
-	else:
-		rdata=list(set([row[:length] for row in data]))
-
-	# filter special datasets
-	if dataset_input!=None:
-		# parse dataset input an get matches
-		matches={}
-		i=0
-		for d,n in zip(dataset_input, dataset_names):
-			check=True
-			if isinstance(d, str):
-				check=(d.find('all')==-1)
-			if check:
-				if n=='material':
-					matches[i]=d
-				elif n=='N' or n=='M':
-					matches[i]=int(d)
-				else:
-					matches[i]=float(d)
-			i=i+1
-	
-		# filter function
-		def filter_func(db_dataset):
-			conditions=[]
-			for index,value in matches.items():
-				conditions.append(db_dataset[index]==value)
-			return all(conditions) 
-
-		# filter special datasets
-		rdata=filter(filter_func, rdata)
-
-	# sort data
-	rdata=sorted(rdata)
-	return rdata
 
 def main():
 	parser = argparse.ArgumentParser(description='Print database defining entries without temperatures')

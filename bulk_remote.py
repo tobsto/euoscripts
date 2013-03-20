@@ -10,7 +10,7 @@ def main():
 	parser = argparse.ArgumentParser(description='Update database for bulk results')
 	parser.add_argument('input', nargs='*', help='Folders containing results of bulk runs or folders containing subfolders with results')
   	parser.add_argument('--dry', action='store_true', help='Simulate updating of database')
-  	parser.add_argument('--no_archive', action='store_true', help='Do not archive results')
+  	parser.add_argument('--archive', action='store_true', help='Archive all results')
 
 	args = parser.parse_args()
 
@@ -46,8 +46,8 @@ def main():
 		cmd+=" %s" % inp
 	if args.dry:
 		cmd+=" --dry"	
-	if args.no_archive:
-		cmd+=" --no_archive"	
+	if args.archive:
+		cmd+=" --archive"	
 
 	try:
 		rcmd=['ssh', 'heisenberg.physik.uni-bonn.de', '%s' % cmd]
