@@ -79,7 +79,7 @@ def main():
 	parser.add_argument('-i', '--input', help='Input folder containing result of a single run.')
 	parser.add_argument('-o', '--output', default=None, help='Output Folder for the single run results (optional, default=input)')
 	parser.add_argument('--no_isodelta_db', action='store_false', help='No fetching of more accurate isodeltas in the case of heterostructures')
-	parser.add_argument('--overwrite', action="store_true", help='recalculate conductivity, even if it is present in the database')
+	parser.add_argument('--no_overwrite', action="store_true", help='recalculate conductivity, even if it is present in the database')
 	#parser.add_argument('--force_download', action="store_true", help='Download *all* results from database, even if they exist in the current folder')
 	args = parser.parse_args()
 	
@@ -130,7 +130,7 @@ def main():
 			print "check existence ..." 
 			exists=check_file_exists(host, '%s/results/%s' % (result_folder, filenames[0]))
 			# calculate conductivity if necessary or forced
-			if not exists or args.overwrite:
+			if not exists or not args.no_overwrite:
 				print "calculate conductivity ..." 
 				getcondremote(host, db, filenames, result_folder, mpicmd, args.np, isodeltadb)
 	
