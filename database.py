@@ -1181,7 +1181,7 @@ def add_input (runcmd, download_path=None, path=None, source=None, input_system_
 		# smaller temperatures thant 'T' 
 		remoteInput=None
 		foundRemote=False
-		t_loc=None
+		t_remote=None
 		if (source!="local"):
 			foundRemote, t_remote, remoteInput = get_remote_input(sp, download_path, input_system_name)
 		
