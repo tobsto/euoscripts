@@ -34,7 +34,7 @@ def main():
 	input=None		:	Alternative input folder
 	initial_input=None	:	Alternative initial input
 	inputFlag=True		:	Search for suitable input
-	check_database=False	:	Check database for suitable input
+	check_database=False	:	Check database for existing results
 	source=None		:	Source for suitable input 
 					('local', 'remote', None(both), 'local-remote'
 					 or 'remote-local'. The latter prefers remote over local input)
