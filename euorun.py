@@ -4,6 +4,7 @@ import subprocess
 import sys
 import os
 
+import findtc as ftc
 import database
 import job
 import system_parameter
@@ -437,7 +438,7 @@ class euorun:
 	def findtc(self, temperatures=None, tsteps=None, deltaM=None):
 		# prepare logfiles
 		self.log_prepare()
-
+			
 		# default magnetisation precision
 		if deltaM==None:
 			deltaM=1.0E-2
@@ -457,97 +458,7 @@ class euorun:
 		# reverse order (decendent)
 		tsteps.reverse()
 	
-		###############################
-		# first coarse temperature scan
-		###############################
-		# flag determine the first run	
-		first=True
-		# maximal magnetisation >(3.5 + cmag)
-		mag=10.0
-		# limiting temperatures below and above tc
-		tm=0.0
-		tp=temperatures[0]
-		# highest mag below tc
-		mag=3.5
-		mag_m=mag
-		# flag determine the first run	
-		first=True
-		for t in temperatures: 
-			# update highest temperature below Tc 
-			tm=tp
-			# update lowest magnetisation below tc
-			mag_m=mag
-			# update lowest temperature above Tc
-			tp=t
-			# run an add initial input for the first run
-			if first:
-				self.run(t, special_input=self.initial_input) 
-			else:
-				self.run(t) 
-			first=False
-			# get magnetisation
-			mag=self.extractMag(t)
-			#print "%07.3f\t%06.4f" % (t, mag)
-			# if magnetisation is below threshold abandon for loop
-			if mag<=deltaM:
-				break
-	
-		if mag>deltaM:
-			print "Error: euorun: findtc: Did not find phase transition with the given temperatures. Break"
-			exit(1)
-	
-		###############################
-		# reduce list of temperatrue steps 
-		# to temperature steps which are 
-		# smaller than last step: tp-tm
-		###############################
-		if tp-tm<=tsteps[-1]:
-			print "Error: euorun: find_tc: Temperature step %e is below allowed value %e. Break" % (tp-tm, tsteps[-1])
-			exit(1)	
-		# get list index in tsteps, where temperature steps become smaller than tp-tm
-		Icut=-1
-		for i in range(0,len(tsteps)-1):
-			if tp-tm>tsteps[i]:
-				Icut=i
-				break
-		tsteps=tsteps[Icut:]
-
-
-		###############################
-		# Automatic detailed search for Tc
-		###############################
-		# upper limit for temperatures (above tc)
-		tmax=tp
-		# increase precision (decrease temperature steps)
-		for dT in tsteps:
-			# start at highest known temperature below Tc 
-			t=tm
-			# set magnetisation below tc
-			mag=mag_m
-			# increase temperature until magnetisation drops below
-			# deltaM or temperature above Tc is reached
-			# get next temperature
-			t=t+dT
-			while mag>deltaM and t<tmax:
-				# run an add initial input for the first run
-				if first:
-					self.run(t, special_input=self.initial_input) 
-				else:
-					self.run(t) 
-				first=False
-				# get magnetisation
-				mag=self.extractMag(t)
-				if (mag>deltaM):
-					# update highest temperature below Tc 
-					tm=t
-					# update lowest magnetisation below tc
-					mag_m=mag
-				# get next temperature
-				t=t+dT
-
-
-		# found tc
-		tc=tm
+		(tc, dT, dM)=ftc.findtc(self.run, self.extractMag, (), (self.initial_input,), (), temperatures, tsteps, deltaM) 
 
 		##############################
 		# save tc in file and upload it to database
@@ -555,14 +466,15 @@ class euorun:
 		local_file="%s/tc.dat" % self.output
 		f=open(local_file, 'w')
 		f.write("# Curie temperature of %s\n" % self.name )
-		f.write("# Magnetisation accuracy dM=%f\n" % deltaM)
-		f.write("# Temperature accuracy dT=%f\n" % tsteps[-1])
+		f.write("# Magnetisation accuracy dM=%f\n" % dM)
+		f.write("# Temperature accuracy dT=%f\n" % dT)
 		f.write("# Tc=%f\n" % tc)
 		f.write("%0.17e\n" % tc)
 		f.close()
-		cmd = "scp %s stollenw@heisenberg.physik.uni-bonn.de:/home/stollenw/projects/euo/results/%s/%s/" % (local_file, self.material_class, self.output)
-		proc = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE)
-		proc.communicate()
+		if self.updatedbFlag:
+			cmd = "scp %s stollenw@heisenberg.physik.uni-bonn.de:/home/stollenw/projects/euo/results/%s/%s/" % (local_file, self.material_class, self.output)
+			proc = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE)
+			proc.communicate()
 		
 		##############################
 		# send finishing notification

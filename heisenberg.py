@@ -68,7 +68,7 @@ def main():
 	os.makedirs(output)
 	run_args=(args.N, output, args.no_mirror, args.longrange, args.J4f, args.Jcf, args.cmag)
 	get_mag_args=(output,)
-	tc=findtc.findtc(run_heisenberg, get_mag_heisenberg, run_args, run_args, get_mag_args)
+	(tc, dT, dM)=findtc.findtc(run_heisenberg, get_mag_heisenberg, run_args, run_args, get_mag_args)
 	
 	f=open(output + "/tc.dat", 'w')
 	f.write("%e\n" % tc)

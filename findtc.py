@@ -27,8 +27,6 @@ def findtc(run, get_mag, run_args=(), run_first_args=(), get_mag_args=(), temper
 	###############################
 	# flag determine the first run	
 	first=True
-	# maximal magnetisation >(3.5 + cmag)
-	mag=10.0
 	# limiting temperatures below and above tc
 	tm=0.0
 	tp=temperatures[0]
@@ -67,8 +65,10 @@ def findtc(run, get_mag, run_args=(), run_first_args=(), get_mag_args=(), temper
 	# smaller than last step: tp-tm
 	###############################
 	if tp-tm<=tsteps[-1]:
-		print "Error: euorun: find_tc: Temperature step %e is below allowed value %e. Break" % (tp-tm, tsteps[-1])
-		exit(1)	
+		tc=tm
+		return (tc, tsteps[-1], deltaM)
+		#print "Error: euorun: find_tc: Temperature step %e is below allowed value %e. Break" % (tp-tm, tsteps[-1])
+		#exit(1)	
 	# get list index in tsteps, where temperature steps become smaller than tp-tm
 	Icut=-1
 	for i in range(0,len(tsteps)-1):
@@ -114,7 +114,7 @@ def findtc(run, get_mag, run_args=(), run_first_args=(), get_mag_args=(), temper
 	# found tc
 	tc=tm
 
-	return tc
+	return (tc, tsteps[-1], deltaM)
 
 
 def main():
