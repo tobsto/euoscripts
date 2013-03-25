@@ -217,12 +217,13 @@ class euorun:
 			if self.inputFlag:
 				runcmd=database.add_input(runcmd, download_path=self.output+"/download/", path=self.input, source=self.source, input_system_name=self.input_system_name)
 		# run job
-		if not self.run_exists(runcmd, runoutput, check_database=self.check_database):
+		runexists=self.run_exists(runcmd, runoutput, check_database=self.check_database)
+		if not runexists:
 			j=job.job(runname, self.log, self.email, [runcmd], logappend=True, verbose=self.verbose, mailcmd=self.mailcmd)
 			j.run()
 
 		# update database
-		if self.updatedbFlag:
+		if self.updatedbFlag and not runexists:
 			self.write_log("* Update bulk database\n")
 			updatecmd="bulk_remote.py %s" % runoutput
 			#subprocess.call(updatecmd, shell=True)
@@ -254,12 +255,13 @@ class euorun:
 				runcmd=database.add_input(runcmd, download_path=self.output+"/download/", path=self.input, source=self.source, input_system_name=self.input_system_name)
 
 		# run job
-		if not self.run_exists(runcmd, runoutput, check_database=self.check_database):
+		runexists=self.run_exists(runcmd, runoutput, check_database=self.check_database)
+		if not runexists:
 			j=job.job(runname, self.log, self.email, [runcmd], logappend=True, verbose=self.verbose, mailcmd=self.mailcmd)
 			j.run()
 
 		# update database
-		if self.updatedbFlag:
+		if self.updatedbFlag and not runexists:
 			self.write_log("* Update isolated database\n")
 			updatecmd="isolated_remote.py %s" % runoutput
 			#subprocess.call(updatecmd, shell=True)
@@ -292,7 +294,8 @@ class euorun:
 
 		#print "check", runcmd
 		# check if run not already exist 
-		if not self.run_exists(runcmd, runoutput, check_database=self.check_database):
+		runexists=self.run_exists(runcmd, runoutput, check_database=self.check_database)
+		if not runexists:
 			if self.isoDeltaFlag:
 				######################################################################################
 				####### add energy shift values for the isolated system constituents #################
@@ -368,7 +371,7 @@ class euorun:
 			j.run()
 
 			# update database
-			if self.updatedbFlag:
+			if self.updatedbFlag and not runexists:
 				self.write_log("* Update heterostructure database\n")
 				#print "update heterostructure db"
 				updatecmd="heterostructure_remote.py %s" % runoutput
