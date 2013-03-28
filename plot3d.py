@@ -6,7 +6,7 @@ import os
 import numpy
 
 def main():
-	parser = argparse.ArgumentParser(description='Update database for energy shifts in EuO and substrate')
+	parser = argparse.ArgumentParser(description='Plot 3d matrix data')
 	parser.add_argument('input', help='File containing 3d data as matrix')
 	parser.add_argument('-o', '--output', default=None, help='Output file')
 	parser.add_argument('-c', '--column', default=None, help='Column for 2d plot', type=int)
