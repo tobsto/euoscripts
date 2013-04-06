@@ -19,7 +19,7 @@ the last values e.g. "Metal all 0.01
 	parser = argparse.ArgumentParser(description='Update database for energy shifts in EuO and substrate')
 	parser.add_argument('input', nargs='*', help='Folders containing results of isolated material runs or folders containing subfolders with results')
   	parser.add_argument('-d', '--database', default='/home/stollenw/projects/euo/database/isolated.db', help='Database file name')
-	parser.add_argument('-s', '--dataset', action="store_true", help=dataset_help)
+	parser.add_argument('-s', '--dataset', nargs='*', help=dataset_help)
   	#parser.add_argument('-r', '--remote_database', default='stollenw@heisenberg.physik.uni-bonn.de:/home/stollenw/projects/euo/database/isolated.db', help='Remote database path (e.g. user@host:/database.db)')
   	parser.add_argument('--overwrite', action='store_true', help='Overwrite database')
   	parser.add_argument('--archive', action='store_true', help='Archive all results')
@@ -37,7 +37,7 @@ the last values e.g. "Metal all 0.01
 	# read in database if it already exists and overwrite flag is not given
 	if os.path.exists(args.database) and not args.overwrite:
 		t.read(args.database)
-	if not args.dataset:
+	if args.dataset==None:
 		t.fill(args.input, args.overwrite)
 		if not args.dry:
 			t.write(args.database)
@@ -49,7 +49,7 @@ the last values e.g. "Metal all 0.01
 		else:
 			print "Archive folder would be: ", args.archive_destination
 	else:
-		t.archive(args.archive_destination, args.input)
+		t.archive(args.archive_destination, args.dataset)
 	
 if __name__=="__main__":
 	main()
