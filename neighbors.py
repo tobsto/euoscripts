@@ -5,8 +5,9 @@ import subprocess
 import math
 
 parser = argparse.ArgumentParser(description='Calculate nearest neighbors in a plane of an fcc lattice')
-parser.add_argument('-l', '--lattice', help='Lattice type')
+parser.add_argument('-l', '--lattice', default='fcc', help='Lattice type')
 parser.add_argument('-N', '--distance', default=2, help='Maximum distance', type=int)
+parser.add_argument('-c','--coupling', help='Filename for inverse cubic coupling')
 parser.add_argument('--cfile', help='Filename for c++ source code')
 parser.add_argument('--flag3d', action='store_true', help='3d')
 args = parser.parse_args()
@@ -119,10 +120,22 @@ def writeCCode(outfile, data, flag3d, scale):
 		f.write("\t\twnn[%i]=%i;\n" % (count-1, N))
 
 def show(data, flag3d, scale):
-	print "Order\t4*D^2\tD\tNN\tCoordinates"
+	print "Order\t%i*D^2\tD\tNN\tCoordinates" % scale
 	for count, d, N, reduced_coordinates in data:
 		dp=math.sqrt(d/scale)
 		print "%i\t%03i\t%05.2f\t%02i\t" %(count, d, dp, N), reduced_coordinates
+
+def coupling(data, scale, output):
+	f=open(output, 'w')
+	j=0.0
+	maxD=0
+	for count, d, N, reduced_coordinates in data:
+		dp=math.sqrt(d/scale)
+		j+=N*1.0/pow(dp,3)
+		f.write("%0.17e\t%0.17e\n" % (dp, j))
+		maxD=dp
+	f.close()
+	print "Integrated coupling (1/x^3) at distance=%f is %0.17e" % (maxD,j)
 
 def main():
 	N=args.distance
@@ -141,6 +154,9 @@ def main():
 	data=neighbors(lattice, args.flag3d)
 	# print results
 	show(data, args.flag3d, scale)
+	# sum nearest neighbors
+	if args.coupling!=None:
+		coupling(data, scale, args.coupling)
 	# save c++ source code
 	if args.cfile!=None:
 		writeCCode(args.cfile, data, args.flag3d, scale)
