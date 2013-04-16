@@ -57,18 +57,22 @@ def main():
 	parser.add_argument('--Jcf', help='Spin-conduction-band-spin-coupling', type=float)
 	parser.add_argument('-o','--output', help='output folder (optional)')
 	parser.add_argument('-m','--cmag', help='file with conduction band magnetisation (optional)')
+	parser.add_argument('--tsteps', nargs='*', help='temperature steps for the Curie temperature search (optional)', type=float)
+	parser.add_argument('-t','--temperatures', nargs='*', help='temperatures for the Curie temperature search (optional)', type=float)
+	parser.add_argument('--deltaM', help='Magnetisation accuracy for the Curie temperature search (optional)', type=float)
 	args = parser.parse_args()
 
 	output=get_output(args.N, args.J4f, args.Jcf)
 	if args.output!=None:
-		output=args.output + "/" + get_output(args.N, args.J4f, args.Jcf)
+		#output=args.output + "/" + get_output(args.N, args.J4f, args.Jcf)
+		output=args.output + "/" 
 		
 	if os.path.exists(output):
 		shutil.rmtree(output)
 	os.makedirs(output)
 	run_args=(args.N, output, args.no_mirror, args.longrange, args.J4f, args.Jcf, args.cmag)
 	get_mag_args=(output,)
-	(tc, dT, dM)=findtc.findtc(run_heisenberg, get_mag_heisenberg, run_args, run_args, get_mag_args)
+	(tc, dT, dM)=findtc.findtc(run_heisenberg, get_mag_heisenberg, run_args, run_args, get_mag_args, args.temperatures, args.tsteps, args.deltaM)
 	
 	f=open(output + "/tc.dat", 'w')
 	f.write("%e\n" % tc)
