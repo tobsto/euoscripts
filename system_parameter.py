@@ -99,6 +99,22 @@ positive.update(common_positive)
 negative={}
 physical_systems.append(physical_system (name, material_class, positive, negative))
 
+# EuO_1-x with finite on-site Coulomb repulsion
+name='Bulk-EuO_1-x-TestW'
+material_class='bulk'
+positive={}
+positive['N']=1
+positive['N0']=0
+positive['impurity']='O'
+positive['ncc_gad']=0.9864
+positive['Jcf']=0.05
+positive['eta']=1E-9
+positive.update(common_positive)
+positive.pop('W')
+negative={}
+physical_systems.append(physical_system (name, material_class, positive, negative))
+
+
 #######################################
 ### Isolated materials ################
 #######################################
