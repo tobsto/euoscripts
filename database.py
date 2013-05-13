@@ -64,21 +64,21 @@ workers.append(worker(	'heisenberg',
 			'/home/stollenw/runs/',
 			 'mpirun'))
 workers.append(worker(	'agem.th.physik.uni-bonn.de',
-			'/home/stollenw/runs/',
-			'/users/stollenw/runs/',
-			'mpirun --hostfile /users/stollenw/runs/hostfile_agem'))
+			'/home/stollenw/runs/agem/',
+			'/home/stollenw/',
+			'mpirun --hostfile /home/stollenw/hostfiles/hostfile_agem'))
 workers.append(worker(	'bgem.th.physik.uni-bonn.de',
-			'/home/stollenw/runs/',
-			'/users/stollenw/runs/',
-			'mpirun --hostfile /users/stollenw/runs/hostfile_bgem'))
+			'/home/stollenw/runs/bgem/',
+			'/home/stollenw/',
+			'mpirun --hostfile /home/stollenw/hostfiles/hostfile_bgem'))
 workers.append(worker(	'cgem.th.physik.uni-bonn.de',
-			'/home/stollenw/runs/',
-			'/users/stollenw/runs/',
-			'mpirun --hostfile /users/stollenw/runs/hostfile_cgem'))
+			'/home/stollenw/runs/cgem/',
+			'/home/stollenw/',
+			'mpirun --hostfile /home/stollenw/hostfiles/hostfile_cgem'))
 workers.append(worker(	'stgeorgenamreith',
-			'/home/stollenw/runs/',
-			'/users/stollenw/runs/',
-			'mpirun --hostfile /users/stollenw/runs/hostfile'))
+			'/home/stollenw/runs/georg/',
+			'/ext/stollenw/',
+			'mpirun --hostfile /ext/stollenw/hostfile'))
 workers.append(worker(	'pfaffenschlag',
 			'/home/stollenw/runs/',	
 			'/users/stollenw/runs/', 'mpirun --hostfile /users/stollenw/runs/hostfile_schlag'))
@@ -95,7 +95,7 @@ workers.append(worker(	'bischofstetten',
 			'/users/stollenw/runs/',
 			'mpirun --hostfile /users/stollenw/runs/hostfile_stetten'))
 workers.append(worker(	'login',
-			'/home/stollenw/druns/',
+			'/home/stollenw/runs/deb/',
 			'/checkpoints/',
 			'mpirun.openmpi --mca btl ^udapl,openib --mca btl_tcp_if_include eth0 -x LD_LIBRARY_PATH --hostfile /users/stollenw/hostfile'))
 
