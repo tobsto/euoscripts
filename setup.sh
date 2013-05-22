@@ -10,6 +10,7 @@ echo "heisenberg: mount georg"
 ssh heisenberg.physik.uni-bonn.de 'mount /home/stollenw/runs/georg'
 echo "heisenberg: mount deb"
 ssh heisenberg.physik.uni-bonn.de 'mount /home/stollenw/runs/deb'
+ssh heisenberg.physik.uni-bonn.de 'mount /mnt/dhome/'
 echo "lunz: mount georg"
 ssh lunzamsee.th.physik.uni-bonn.de 'sshfs stollenw@stgeorgenamreith:/ext/stollenw /ext/stollenw'
 

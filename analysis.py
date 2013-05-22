@@ -21,6 +21,7 @@ quantity specified by one of the following keywords
 
 print
 print full
+tc
 
 totalmag	(for bulk)
 cond		(for bulk)
@@ -64,10 +65,10 @@ the last values e.g. "all 5 all 0.01
 	sophisticated_result_keywords=None
 	if args.database=='bulk':
 		simple_result_keywords=['cond', 'resist', 'totalmag']
-		sophisticated_result_keywords=[]
+		sophisticated_result_keywords=['tc']
 	elif args.database=='isolated' or args.database=='hetero':
 		simple_result_keywords=['avmag']
-		sophisticated_result_keywords=['cond_para', 'resist_para', 'cond_perp', 'resist_perp', 'isodelta']
+		sophisticated_result_keywords=['cond_para', 'resist_para', 'cond_perp', 'resist_perp', 'isodelta', 'tc']
 
 	# keywords that produce results
 	result_keywords=simple_result_keywords + sophisticated_result_keywords
@@ -130,10 +131,44 @@ the last values e.g. "all 5 all 0.01
 		if not os.path.exists(suboutput):
 			os.makedirs(suboutput)
 		
+	# in the Curie temperature case, create single file for all datasets
+	outfile=''
+	tcd=''
+	tci=0
+	if args.keyword=='tc':
+		if args.dataset==None:
+			print "Dataset needed for Curie temperature"
+			exit(1)
+		# check if number single attribute is filterd out
+		if (args.dataset.count('all')+(len(corenames)-1-len(args.dataset))>1):
+			print "Dataset has to many degrees of freedom."
+			exit(1)
+		tcc=[]
+		i=0
+		for d,n in zip(args.dataset,corenames):
+			if d!='all':
+				if n=='material':
+					tcc.append(d)
+				elif n=='N' or n=='M':
+					tcc.append(n + "%03i" % int(d))
+				else:
+					tcc.append(n + "%06.4f" % float(d))
+			else:
+				tcd=n
+				tci=i
+			i=i+1
+		if (tcd==''):
+			tcd=corenames[-2]
+			tci=len(corenames)-2
+		tcname='_'.join(tcc)
+		outfile="%s/%s_%s.dat" % (suboutput, args.keyword, tcname)
+		#remove file if it already exists
+		f=open(outfile, 'w')
+		f.write("# %s\tCurie temperature Tc\tAccuracy of Tc\n" % tcd)
+		f.close()
 
 	# iterate through database
 	for fd in filtered_data:
-		print fd
 		# defining name
 		material_folder=db.get_output(*fd)
 		namestr=material_folder.rstrip('/')
@@ -206,7 +241,27 @@ the last values e.g. "all 5 all 0.01
 					temp=td[len(corenames)-1]
 					f.write("%0.17e\t%0.17e\n" % (temp, isodelta))
 				f.close()
-
+			if args.keyword=='tc':
+				# get tc and error in tc
+				filename="%s/%s/%s/tc.dat" % (resultFolder, subResultFolder, material_folder)
+				if not os.path.exists(filename):
+					print "Warning: Dataset %s=%f is not present. %s does not exist." % (tcd, fd[tci], filename)
+				else:
+					print "Add dataset: %s=%f" % (tcd, fd[tci])
+					g=open(filename, 'r')
+					tc=0.0
+					dtc=0.0
+					for l in g.readlines():
+						if not l.startswith('#'):
+							tc=float(l.split()[0])
+						elif l.startswith('# Temperature accuracy'):
+							dtc=float(l.partition('=')[2])
+					g.close()
+					# write tc data row
+					f=open(outfile, 'a')
+					f.write("%f\t%f\t%f\n" % (fd[tci], tc, dtc))
+					f.close()
+			
 
 		elif args.keyword=='print':
 			print 'Temperature\t%s' % special
