@@ -196,6 +196,26 @@ negative={}
 negative['N0']=0
 physical_systems.append(physical_system (name, material_class, positive, negative, (left,right)))
 
+# EuGdO-HeisenbergMetal-Heterostructure
+name='EuGdO-HeisenbergMetal-Heterostructure-eta1e-4'
+material_class='heterostructure'
+left='EuGdO'
+right='Heisenberg-Metal'
+positive={}
+positive['impurity']='Gd'
+positive['ncc_gad']=0.9952
+positive['Jcf']=0.05
+positive['eta']=1E-4
+positive['mirror']=True
+positive['magnsub']=True
+positive['Jcfs']=0.05
+positive['J4fs']=7E-5
+positive['insulator']=False
+positive.update(common_positive)
+negative={}
+negative['N0']=0
+physical_systems.append(physical_system (name, material_class, positive, negative, (left,right)))
+
 # HeisenbergMetal-Metal-Heterostructure
 name='HeisenbergMetal-Metal-Heterostructure'
 material_class='heterostructure'
@@ -326,6 +346,28 @@ positive['ncc_gad']=0.9952
 positive['Jcf']=0.0405
 #positive['Rmax']=10
 positive['eta']=1E-4
+positive['mirror']=True
+positive['insulator']=False
+positive['longrange']=True
+positive.update(common_positive)
+negative={}
+negative['N0']=0
+physical_systems.append(physical_system (name, material_class, positive, negative, (left,right)))
+
+# EuGdO-HeisenbergMetal-Heterostructure with long range RKKY coupling
+name='EuGdO-HeisenbergMetal-Heterostructure-eta1e-4-LR'
+material_class='heterostructure'
+left='EuGdO-LR'
+right='Heisenberg-Metal'
+positive={}
+positive['impurity']='Gd'
+positive['ncc_gad']=0.9952
+positive['Jcf']=0.0405
+#positive['Rmax']=10
+positive['eta']=1E-4
+positive['magnsub']=True
+positive['Jcfs']=0.0405
+positive['J4fs']=7E-5
 positive['mirror']=True
 positive['insulator']=False
 positive['longrange']=True
@@ -475,8 +517,11 @@ class system_parameter:
 		self.verbose             =    option_exists(runcmd, ('--verbose',))
 		self.no_cleaning         =    option_exists(runcmd, ('--no_cleaning',))
 		self.longrange           =    option_exists(runcmd, ('--longrange',))
-		if (self.longrange):
-			self.Rmax        = float(get_option(runcmd, ('--Rmax',),                              2.0))
+		self.Rmax                = float(get_option(runcmd, ('--Rmax',),                              2.0))
+		self.magnsub             =    option_exists(runcmd, ('--magnsub',))
+		self.J4fs                = float(get_option(runcmd, ('--J4fs',),                             7E-5))
+		self.Jcfs                = float(get_option(runcmd, ('--Jcfs',),                             5E-2))
+		self.Delta_m             = float(get_option(runcmd, ('--Delta_m',),                           0.0))
 
 	# read in parameter file and map this onto a material class.
 	def read_file(self, parafilename):
@@ -547,6 +592,15 @@ class system_parameter:
 		if parameterExists(parafilename, 'longrange'):
 			self.longrange = True
 			self.Rmax      = float(extractParameter(parafilename, 'Rmax'              ))
+		self.magnsub=False
+		self.J4fs=7E-5
+		self.Jcfs=5E-2
+		if parameterExists(parafilename, 'magnsub'):
+			self.magnsub = True
+			self.J4fs    = float(extractParameter(parafilename, 'J4fs'                ))
+			self.Jcfs    = float(extractParameter(parafilename, 'Jcfs'                ))
+		if parameterExists(parafilename, 'Delta_m'):
+			self.Delta_m = float(extractParameter(parafilename, 'Delta_m'             ))
 
 	def match(self, key, value):
 		saved_value=eval('self.%s' % key)
