@@ -1,0 +1,29 @@
+#!/usr/bin/python
+
+import argparse
+
+# Update database for energy shifts in EuO and substrate
+def main():
+	parser = argparse.ArgumentParser(description='Search several files for pattern')
+	parser.add_argument('input', nargs='+', help='Input files')
+	parser.add_argument('-p','--pattern', help='pattern')
+
+	args = parser.parse_args()
+	
+	for filename in args.input:
+		found=False
+		f = open(filename, 'r')
+		n=1
+		for l in f.readlines():
+			if args.pattern in l:
+				if not found:
+					print '\nFound in %s' % filename	
+				print 'line %5i:\t%s' % (n,l.rstrip('\n'))
+				found=True
+			n=n+1
+		f.close()
+
+
+
+if __name__=="__main__":
+	main()
