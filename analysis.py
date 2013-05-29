@@ -264,12 +264,14 @@ the last values e.g. "all 5 all 0.01
 			
 
 		elif args.keyword=='print':
+			print namestr
 			print 'Temperature\t%s' % special
 			for td in temperature_datasets:
 				print "%e\t%e" % (td[-3], td[-2])
 			print
 
 		elif args.keyword=='printfull':
+			print namestr
 			print 'Temperature\t%s\tSource' % special
 			for td in temperature_datasets:
 				print "%e\t%e\t%s" % (td[-3], td[-2], td[-1])

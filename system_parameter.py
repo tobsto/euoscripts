@@ -85,6 +85,23 @@ positive.update(common_positive)
 negative={}
 physical_systems.append(physical_system (name, material_class, positive, negative))
 
+# EuGdO with various impurity energies
+EdValues=(-0.00,-0.01,-0.02,-0.03,-0.04,-0.05,-0.06,-0.1,-0.15)
+for Ed in EdValues:
+	name='Bulk-EuGdO-Ed%+05.3f' % Ed
+	material_class='bulk'
+	positive={}
+	positive['N']=1
+	positive['N0']=0
+	positive['impurity']='Gd'
+	positive['ncc_gad']=0.9952
+	positive['Jcf']=0.05
+	positive['eta']=1E-9
+	positive.update(common_positive)
+	positive['Ed0']=Ed
+	negative={}
+	physical_systems.append(physical_system (name, material_class, positive, negative))
+
 # EuO_1-x
 name='Bulk-EuO_1-x'
 material_class='bulk'
@@ -100,19 +117,21 @@ negative={}
 physical_systems.append(physical_system (name, material_class, positive, negative))
 
 # EuO_1-x with finite on-site Coulomb repulsion
-name='Bulk-EuO_1-x-TestW'
-material_class='bulk'
-positive={}
-positive['N']=1
-positive['N0']=0
-positive['impurity']='O'
-positive['ncc_gad']=0.9864
-positive['Jcf']=0.05
-positive['eta']=1E-9
-positive.update(common_positive)
-positive.pop('W')
-negative={}
-physical_systems.append(physical_system (name, material_class, positive, negative))
+Wvalues=(0.001,0.002,0.005,0.01,0.02,0.05,0.1,0.2,0.5)
+for W in Wvalues:
+	name='Bulk-EuO_1-x-W%05.3f' % W
+	material_class='bulk'
+	positive={}
+	positive['N']=1
+	positive['N0']=0
+	positive['impurity']='O'
+	positive['ncc_gad']=0.9864
+	positive['Jcf']=0.05
+	positive['eta']=1E-9
+	positive.update(common_positive)
+	positive['W']=W
+	negative={}
+	physical_systems.append(physical_system (name, material_class, positive, negative))
 
 
 #######################################
@@ -251,19 +270,6 @@ physical_systems.append(physical_system (name, material_class, positive, negativ
 ####################################################################
 ### Bulk materials with long range RKKY coupling
 ####################################################################
-# EuGdO (leave value of Jcf open for testing purposed)
-name='Bulk-EuGdO-TestJcf'
-material_class='bulk'
-positive={}
-positive['N']=1
-positive['N0']=0
-positive['impurity']='Gd'
-positive['ncc_gad']=0.9952
-positive['eta']=1E-9
-positive['longrange']=True
-positive.update(common_positive)
-negative={}
-physical_systems.append(physical_system (name, material_class, positive, negative))
 
 # EuGdO with long range (LR) coupling
 name='Bulk-EuGdO-LR'
@@ -274,12 +280,32 @@ positive['N0']=0
 positive['impurity']='Gd'
 positive['ncc_gad']=0.9952
 positive['Jcf']=0.0405
-#positive['Rmax']=10
 positive['eta']=1E-9
 positive['longrange']=True
 positive.update(common_positive)
 negative={}
 physical_systems.append(physical_system (name, material_class, positive, negative))
+
+
+# EuGdO with long range (LR) coupling with various c-f couplings
+JcfValues=(0.0395,0.0400,0,0405,0.0410)
+RmaxValues=(5,10,15,20)
+for Jcf in JcfValues:
+	for Rmax in RmaxValues:
+		name='Bulk-EuGdO-LR-Jcf%06.4f_Rmax%02i' % (Jcf, Rmax)
+		material_class='bulk'
+		positive={}
+		positive['N']=1
+		positive['N0']=0
+		positive['impurity']='Gd'
+		positive['ncc_gad']=0.9952
+		positive['Jcf']=Jcf
+		positive['Rmax']=Rmax
+		positive['eta']=1E-9
+		positive['longrange']=True
+		positive.update(common_positive)
+		negative={}
+		physical_systems.append(physical_system (name, material_class, positive, negative))
 
 # bulk heisenberg-metal with long range RKKY coupling
 name='Bulk-Heisenberg-Metal-LR'
@@ -650,7 +676,7 @@ class system_parameter:
 					exit(1)
 				runcmd='euo.out'
 				for (key, value) in system.positive.items():
-					if not key in common_positive:
+					if not (key, value) in common_positive.items():
 						if type(value)!=bool:
 							runcmd+=' --%s %s' % (key, value)
 						else:
@@ -673,7 +699,7 @@ class system_parameter:
 					exit(1)
 				runcmd='euo.out'
 				for (key, value) in system.positive.items():
-					if not key in common_positive:
+					if not (key, value) in common_positive.items():
 						if type(value)!=bool:
 							runcmd+=' --%s %s' % (key, value)
 						else:
@@ -696,7 +722,7 @@ class system_parameter:
 					exit(1)
 				runcmd='euo.out'
 				for (key, value) in system.positive.items():
-					if not key in common_positive:
+					if not (key, value) in common_positive.items():
 						if type(value)!=bool:
 							runcmd+=' --%s %s' % (key, value)
 						else:
@@ -730,7 +756,7 @@ class system_parameter:
 			print ""
 			print "\tAttributes:"
 			for (key, value) in system.positive.items():
-				if not key in common_positive:
+				if not (key, value) in common_positive.items():
 					print '\t\t'+'{0: <10}'.format(key)+'\t{0: <10}'.format(value)
 			print ""
 			print "\tNegated Attributes:"
