@@ -5,7 +5,7 @@ import subprocess
 import math
 
 parser = argparse.ArgumentParser(description='Calculate nearest neighbors in a plane of an fcc lattice')
-parser.add_argument('-l', '--lattice', default='fcc', help='Lattice type')
+parser.add_argument('-M', '--monolayer', action='store_true', help='Devide into monolayers')
 parser.add_argument('-N', '--distance', default=2, help='Maximum distance', type=int)
 parser.add_argument('-c','--coupling', help='Filename for inverse cubic coupling')
 parser.add_argument('--cfile', help='Filename for c++ source code')
@@ -58,8 +58,6 @@ def get_lattice_fcc(N):
 	# sort by distance to orgin
 	lattice.sort(key=lambda x: x[0])
 	return scale, lattice
-
-
 
 def neighbors(lattice, flag3d):
 	# all distances
@@ -137,29 +135,116 @@ def coupling(data, scale, output):
 	f.close()
 	print "Integrated coupling (1/x^3) at distance=%f is %0.17e" % (maxD,j)
 
+
+#################################################
+############## monolayer ########################
+#################################################
+def get_monolayers(N):
+	scale=8.0
+	scale_parallel=4.0
+	# fill lattice and calculate distance to origin
+	monolayers=[]
+	for k in range(0,2*N+1):
+		monolayers.append([])
+		for i in range(0,2*N+1):
+			for j in range(0,2*N+1):
+				if ((i+j+k)%2==0):
+					x=0.5*i
+					y=0.5*j
+					z=0.5*k
+					d=distance_square_3d(scale,x,y,z)
+					dpara=distance_square_2d(scale_parallel,x,y)
+					# exclude origin and points
+					# outside of a circle with
+					# distance N
+					if (not (i==0 and j==0 and k==0)) and d<=scale*N*N:
+						monolayers[k].append((dpara, x, y))
+		# sort by distance to orgin
+		monolayers[k].sort(key=lambda x: x[0])
+	return scale_parallel, scale, monolayers
+
+def neighbors_monolayer(monolayers):
+	data=[]
+	for n in range(0,len(monolayers)):
+		# all parallel distances
+		distances=[row[0] for row in monolayers[n]]
+		# coordinates
+		coordinates=[(row[1],row[2]) for row in monolayers[n]]
+		# all distances (without duplicates)
+		reduced_distances=list(set(distances))
+		reduced_distances.sort()
+	
+		data.append([])
+		count=1
+		for d in reduced_distances:
+			# indices of distance duplicates
+			indices=[i for i, x in enumerate(distances) if x == d]
+			# number of distance duplicates
+			# counting 4 times and twice for coordinates which lie on an axis
+			N=0
+			for i in indices:
+				# on the y-axis
+				if   coordinates[i][0]==0 and coordinates[i][1]!=0:
+					N+=2
+				# on the x-axis
+				elif coordinates[i][1]==0 and coordinates[i][0]!=0:
+					N+=2
+				# at the origin 
+				elif coordinates[i][0]==0 and coordinates[i][1]==0:
+					N+=1
+				else:
+					N+=4
+	
+	
+			# corresponding coordinates
+			reduced_coordinates=[coordinates[i] for i in indices]
+			# remove duplicates in coordinates
+			reduced_coordinates=list(set(reduced_coordinates))
+			reduced_coordinates.sort()
+			
+			# save data
+			data[n].append((count, d, N, reduced_coordinates))
+			count=count+1
+	return data
+
+def show_monolayer(data, scale_parallel, scale):
+	print "Layer\tOrder\t%i*d^2\td\tnn\t%i*D^2\tD\tCoordinates" % (scale_parallel, scale)
+	for n in range(0,len(data)):
+		for count, d, N, reduced_coordinates in data[n]:
+			dp=math.sqrt(d/scale_parallel)
+			D=distance_square_3d(scale, reduced_coordinates[0][0],reduced_coordinates[0][1],0.5*n)
+			Dp=math.sqrt(D/scale)
+			print "%i\t%i\t%03i\t%05.2f\t%02i\t%03i\t%05.2f\t" %(n, count, d, dp, N, D, Dp), reduced_coordinates
+
+
 def main():
 	N=args.distance
-	# get lattice
-	scale=None
-	lattice=None
-	if (args.lattice=="fcc" and args.flag3d):
-		scale, lattice = get_lattice_fcc(N)
-	elif (args.lattice=="fcc" and not args.flag3d):
-		scale, lattice = get_lattice_fcc_plane(N)
-	else:
-		print "Lattice type must be: 'fcc'. Break."
-		exit(1)
-
-	# get nearest neighbors and distances
-	data=neighbors(lattice, args.flag3d)
-	# print results
-	show(data, args.flag3d, scale)
-	# sum nearest neighbors
-	if args.coupling!=None:
-		coupling(data, scale, args.coupling)
-	# save c++ source code
-	if args.cfile!=None:
-		writeCCode(args.cfile, data, args.flag3d, scale)
+	if not (args.monolayer):
+		# get lattice
+		scale=None
+		lattice=None
+		if (args.flag3d):
+			scale, lattice = get_lattice_fcc(N)
+		else:
+			scale, lattice = get_lattice_fcc_plane(N)
 	
+		# get nearest neighbors and distances
+		data=neighbors(lattice, args.flag3d)
+		# print results
+		show(data, args.flag3d, scale)
+		# sum nearest neighbors
+		if args.coupling!=None:
+			coupling(data, scale, args.coupling)
+		# save c++ source code
+		if args.cfile!=None:
+			writeCCode(args.cfile, data, args.flag3d, scale)
+	else:	
+		# get monolayer
+		scale_parallel, scale, monolayers = get_monolayers(N)
+		# get nearest neighbors and distances
+		data=neighbors_monolayer(monolayers)
+		# print results
+		show_monolayer(data, scale_parallel, scale)
+
 if __name__=="__main__":
 	main()
