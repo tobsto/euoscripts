@@ -297,7 +297,11 @@ class bulk_database:
 		self.data=sorted(self.data, key = lambda element : element[0])
 
 	def get_output(self, material, ni):
+		if ((str(ni).find('e')==-1) and len(str(ni))<=6):
 			return "%s_ni%06.4f/" % (material, ni)
+		else:
+			return "%s_ni%s/" % (material, str(ni))
+
 	def get_temp_output(self, t):
 			return "t%07.3f/" % t
 	# archive results
@@ -515,7 +519,11 @@ class isolated_database:
 		self.data=sorted(self.data, key = lambda element : element[0])
 
 	def get_output(self, material, N, nc):
+		if ((str(nc).find('e')==-1) and len(str(nc))<=6):
 			return "%s_N%03i_nc%06.4f/" % (material, N, nc)
+		else:
+			return "%s_N%03i_nc%s/" % (material, N, str(nc))
+
 	def get_temp_output(self, t):
 			return "t%07.3f/" % t
 	# archive results
@@ -733,7 +741,13 @@ class heterostructure_database:
 		self.data=sorted(self.data, key = lambda element : element[1])
 
 	def get_output(self, material, N, M, ni, ncr, dW):
-		return "%s_N%03i_M%03i_ni%06.4f_ncr%06.4f_dW%06.4f/" % (material, N, M, ni, ncr, dW)
+		ni_str=str(ni)
+		if ((str(ni).find('e')==-1) and len(str(ni))<=6):
+			ni_str="%06.4f" % ni
+		ncr_str=str(ncr)
+		if ((str(ncr).find('e')==-1) and len(str(ncr))<=6):
+			ncr_str="%06.4f" % ncr
+		return "%s_N%03i_M%03i_ni%s_ncr%s_dW%06.4f/" % (material, N, M, ni_str, ncr_str, dW)
 
 	def get_temp_output(self, t):
 			return "t%07.3f/" % t
