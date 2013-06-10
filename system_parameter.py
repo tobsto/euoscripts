@@ -58,6 +58,21 @@ positive.update(common_positive)
 negative={}
 physical_systems.append(physical_system (name, material_class, positive, negative))
 
+# bulk Gadolinium
+name='Bulk-Gadolinium'
+material_class='bulk'
+positive={}
+positive['N']=1
+positive['N0']=0
+positive['impurity']='None'
+positive['Jcf']=0.061
+positive['eta']=0.0
+positive['longrange']=True
+positive.update(common_positive)
+positive['J4f']=0.0
+negative={}
+physical_systems.append(physical_system (name, material_class, positive, negative))
+
 # bulk heisenberg-metal
 name='Bulk-Heisenberg-Metal'
 material_class='bulk'
