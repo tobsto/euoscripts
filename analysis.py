@@ -7,13 +7,84 @@ import argparse
 import database
 import system_parameter
 import itertools
+import findtc
 
 def read(filename, line=0):
 	f=open(filename, 'r')
 	lines=f.readlines()
 	f.close()
 	return lines[line].split()
-			
+
+class xmagfile(Exception): 
+    def __init__(self, n): 
+        self.name = n
+
+def extractMag(t,dbtype,db,folder):
+	magfile=None
+	if dbtype=='bulk':
+		magfile=folder + db.get_temp_output(t) + "results/totalmag.dat"
+	elif dbtype=='isolated':
+		magfile=folder + db.get_temp_output(t) + "results/avmag.dat"
+	else:
+		magfile=folder + db.get_temp_output(t) + "results/avmag.dat"
+	# read magnetisation file or download it (in the case of checkdatabase==True)
+	if os.path.exists(magfile):
+		return float(database.extractResultValue2ndColumn(magfile))
+	else:
+		raise xmagfile(magfile)
+		
+def dummyrun(t):
+	pass
+
+def gettc(dbtype, db, folder, temperatures=None, tsteps=None, deltaM=None):
+	# default magnetisation precision
+	if deltaM==None:
+		deltaM=1.0E-2
+	# default temperatures steps
+	if temperatures==None:
+		temperatures=range(20,301,20)
+	# default temperatures steps
+	if tsteps==None:
+		# default temperature increments
+		tsteps=[20,10,5,1,0.1]
+	# tsteps must contain at least one entry
+	if len(tsteps)<1:
+		print "Error: find_tc: No temperature steps given. Break"
+		exit(1)	
+	# sort tsteps
+	tsteps.sort()
+	# reverse order (decendent)
+	tsteps.reverse()
+
+	try:
+		(tc, dT, dM)=findtc.findtc(dummyrun, extractMag, (), (), (dbtype, db, folder), temperatures, tsteps, deltaM) 
+	except xmagfile, x:
+		print x.name, "does not exist!"	
+		return False
+	##############################
+	# save tc
+	##############################
+	tcfile="%s/tc.dat" % folder
+	write=True
+	if os.path.exists(tcfile):
+		write=False
+		print "The file %s, already exists. It reads:"
+		f=open(tcfile, 'r')
+		for l in f.readlines():
+			print l
+		answer=raw_input("Overwrite? (Y/n)")
+		if answer!='n':
+			write=True
+	if write:
+		f=open(tcfile, 'w')
+		f.write("# Curie temperature of %s\n" % folder.rstrip('/') )
+		f.write("# Magnetisation accuracy dM=%f\n" % dM)
+		f.write("# Temperature accuracy dT=%f\n" % dT)
+		f.write("# Tc=%f\n" % tc)
+		f.write("%0.17e\n" % tc)
+		f.close()
+	return True
+	
 def main():
 	parser = argparse.ArgumentParser(description='Analyse euo program results', formatter_class=argparse.RawTextHelpFormatter)
 	keyword_help="""Calculate the temperature dependent 
@@ -52,6 +123,9 @@ the last values e.g. "all 5 all 0.01
 	parser.add_argument('-o', '--output', default='/home/stollenw/projects/euo/analysis/', help='Output folder (optional)')
 	parser.add_argument('--dbpath', help='Path to database file (optional)')
 	parser.add_argument('--resultpath', default='/home/stollenw/projects/euo/results/', help='Path to results (optional)')
+	parser.add_argument('--temperatures', nargs='*', default=None, help='Tempertures for tc search (optional, only for tc)', type=float)
+	parser.add_argument('--tsteps', nargs='*', default=None, help='Temperture steps for tc search (optional, only for tc)', type=float)
+	parser.add_argument('--dM', default=None, help='Magnetisation resolution for tc search (optional, only for tc)', type=float)
 	
 	args = parser.parse_args()
 
@@ -243,10 +317,19 @@ the last values e.g. "all 5 all 0.01
 				f.close()
 			if args.keyword=='tc':
 				# get tc and error in tc
-				filename="%s/%s/%s/tc.dat" % (resultFolder, subResultFolder, material_folder)
+				folder="%s/%s/%s/" % (resultFolder, subResultFolder, material_folder)
+				filename="%s/tc.dat" % folder
+				success=True
 				if not os.path.exists(filename):
+					success=False
 					print "Warning: Dataset %s=%f is not present. %s does not exist." % (tcd, fd[tci], filename)
-				else:
+					answer=raw_input("Try to get? (Y/n)")
+					if answer!='n':
+						success=gettc(args.database, db, folder, args.temperatures, args.tsteps, args.dM)
+						if not success:
+							print "Warning: Data for %s=%f is not present. -> Skip" % (tcd, fd[tci])
+							
+				if success:	
 					print "Add dataset: %s=%f" % (tcd, fd[tci])
 					g=open(filename, 'r')
 					tc=0.0
