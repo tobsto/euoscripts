@@ -94,16 +94,18 @@ print
 print full
 tc
 
-totalmag	(for bulk)
-cond		(for bulk)
-resist		(for bulk)
-
-avmag		(for isolated and heterostructures)
-cond_para	(for isolated and heterostructures)
-resist_para	(for isolated and heterostructures)
-cond_perp	(for isolated and heterostructures)
-resist_perp 	(for isolated and heterostructures)
-isodelta 	(energy shift (-mu) for isolated systems)
+occNum_c		(for bulk)
+dopant_activation	(for bulk)
+totalmag		(for bulk)
+cond			(for bulk)
+resist			(for bulk)
+	
+avmag			(for isolated and heterostructures)
+cond_para		(for isolated and heterostructures)
+resist_para		(for isolated and heterostructures)
+cond_perp		(for isolated and heterostructures)
+resist_perp 		(for isolated and heterostructures)
+isodelta 		(energy shift (-mu) for isolated systems)
 
 """
 
@@ -139,7 +141,7 @@ the last values e.g. "all 5 all 0.01
 	sophisticated_result_keywords=None
 	if args.database=='bulk':
 		simple_result_keywords=['cond', 'resist', 'totalmag']
-		sophisticated_result_keywords=['tc']
+		sophisticated_result_keywords=['tc', 'dopant_activation', 'occNum_c']
 	elif args.database=='isolated' or args.database=='hetero':
 		simple_result_keywords=['avmag']
 		sophisticated_result_keywords=['cond_para', 'resist_para', 'cond_perp', 'resist_perp', 'isodelta', 'tc']
@@ -209,9 +211,9 @@ the last values e.g. "all 5 all 0.01
 	outfile=''
 	tcd=''
 	tci=0
-	if args.keyword=='tc':
+	if args.keyword=='tc' or args.keyword=='dopant_activation' or args.keyword=='occNum_c':
 		if args.dataset==None:
-			print "Dataset needed for Curie temperature"
+			print "Dataset needed for Curie temperature / dopant activation at T=5K / occNum at T=5K"
 			exit(1)
 		# check if number single attribute is filterd out
 		if (args.dataset.count('all')+(len(corenames)-1-len(args.dataset))>1):
@@ -238,7 +240,12 @@ the last values e.g. "all 5 all 0.01
 		outfile="%s/%s_%s.dat" % (suboutput, args.keyword, tcname)
 		#remove file if it already exists
 		f=open(outfile, 'w')
-		f.write("# %s\tCurie temperature Tc\tAccuracy of Tc\n" % tcd)
+		if args.keyword=='tc': 
+			f.write("# %s\tCurie temperature Tc\tAccuracy of Tc\n" % tcd)
+		elif args.keyword=='dopant_activation': 
+			f.write("# %s\tdopant activation (n_c/n_i)\n" % tcd)
+		elif args.keyword=='occNum_c': 
+			f.write("# %s\tConduction band occupation number (n_c)\n" % tcd)
 		f.close()
 
 	# iterate through database
@@ -315,6 +322,21 @@ the last values e.g. "all 5 all 0.01
 					temp=td[len(corenames)-1]
 					f.write("%0.17e\t%0.17e\n" % (temp, isodelta))
 				f.close()
+
+			if args.keyword=='dopant_activation' or args.keyword=='occNum_c':
+				folder="%s/%s/%s/" % (resultFolder, subResultFolder, material_folder)
+				filename="%s/%s/results/%s.dat" % (folder, db.get_temp_output(5.0), 'occNum_c')
+				if not os.path.exists(filename):
+					print "Warning: Dataset (T=5K) %s=%f is not present. %s does not exist." % (tcd, fd[tci], filename)
+				else:
+					occNum_c=float(read(filename, line=0)[0])
+					f=open(outfile, 'a')
+					if args.keyword=='dopant_activation':
+						f.write("%0.17e\t%0.17e\n" % (fd[tci], occNum_c/fd[tci]))
+					else:
+						f.write("%0.17e\t%0.17e\n" % (fd[tci], occNum_c))
+					f.close()
+
 			if args.keyword=='tc':
 				# get tc and error in tc
 				folder="%s/%s/%s/" % (resultFolder, subResultFolder, material_folder)
