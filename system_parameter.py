@@ -65,7 +65,7 @@ positive={}
 positive['N']=1
 positive['N0']=0
 positive['impurity']='None'
-positive['Jcf']=0.061
+positive['Jcf']=0.03036
 positive['eta']=0.0
 positive['longrange']=True
 positive.update(common_positive)
@@ -132,7 +132,8 @@ negative={}
 physical_systems.append(physical_system (name, material_class, positive, negative))
 
 # EuO_1-x with finite on-site Coulomb repulsion
-Wvalues=(0.001,0.002,0.005,0.01,0.02,0.05,0.1,0.2,0.5)
+Wvalues=(0.000,0.001,0.002,0.003,0.004,0.005,0.01,0.02,0.03,0.04,0.045,0.044,0.05,0.06,0.07,0.08,0.09,0.093,0.094,0.1,0.125,0.2,0.5)
+EdValues=(0.00,-0.01,-0.02,-0.03,-0.04,-0.05,-0.06,-0.1,-0.125,-0.15)
 for W in Wvalues:
 	name='Bulk-EuO_1-x-W%05.3f' % W
 	material_class='bulk'
@@ -147,6 +148,24 @@ for W in Wvalues:
 	positive['W']=W
 	negative={}
 	physical_systems.append(physical_system (name, material_class, positive, negative))
+
+# EuO_1-x with finite on-site Coulomb repulsion and varying impurity level energy
+for W in Wvalues:
+	for Ed in EdValues:
+		name='Bulk-EuO_1-x-Ed%+05.3f-W%05.3f' % (Ed,W)
+		material_class='bulk'
+		positive={}
+		positive['N']=1
+		positive['N0']=0
+		positive['impurity']='O'
+		positive['ncc_gad']=0.9864
+		positive['Jcf']=0.05
+		positive['eta']=1E-9
+		positive.update(common_positive)
+		positive['W']=W
+		positive['Ed0']=Ed
+		negative={}
+		physical_systems.append(physical_system (name, material_class, positive, negative))
 
 
 #######################################
@@ -207,6 +226,7 @@ positive['Jcf']=0.05
 positive['eta']=1E-6
 positive['mirror']=True
 positive['insulator']=False
+positive['magnsub']=False
 positive.update(common_positive)
 negative={}
 negative['N0']=0
@@ -225,6 +245,7 @@ positive['Jcf']=0.05
 positive['eta']=1E-4
 positive['mirror']=True
 positive['insulator']=False
+positive['magnsub']=False
 positive.update(common_positive)
 negative={}
 negative['N0']=0
@@ -261,6 +282,7 @@ positive['Jcf']=0.05
 positive['eta']=0.0
 positive['mirror']=True
 positive['insulator']=False
+positive['magnsub']=False
 positive.update(common_positive)
 negative={}
 negative['N0']=0
@@ -277,6 +299,7 @@ positive['Jcf']=0.00
 positive['eta']=0.0
 positive['mirror']=True
 positive['insulator']=False
+positive['magnsub']=False
 positive.update(common_positive)
 negative={}
 negative['N0']=0
@@ -356,6 +379,24 @@ positive.update(common_positive)
 negative={}
 physical_systems.append(physical_system (name, material_class, positive, negative))
 
+# heisenberg-metal with long range RKKY coupling
+name='Gadolinium'
+material_class='isolated'
+positive={}
+positive['N0']=0
+positive['impurity']='None'
+positive['Jcf']=0.03036
+#positive['Rmax']=10
+positive['eta']=0.0
+positive['mirror']=True
+positive['longrange']=True
+positive.update(common_positive)
+positive['J4f']=0.0
+negative={}
+physical_systems.append(physical_system (name, material_class, positive, negative))
+
+
+
 # EuGdO with long range RKKY coupling
 name='EuGdO-LR'
 material_class='isolated'
@@ -390,6 +431,7 @@ positive['eta']=1E-4
 positive['mirror']=True
 positive['insulator']=False
 positive['longrange']=True
+positive['magnsub']=False
 positive.update(common_positive)
 negative={}
 negative['N0']=0
@@ -417,6 +459,29 @@ negative={}
 negative['N0']=0
 physical_systems.append(physical_system (name, material_class, positive, negative, (left,right)))
 
+# EuGdO-Gadolinium-Heterostructure with long range RKKY coupling
+name='EuGdO-Gadolinium-Heterostructure-eta1e-4-LR'
+material_class='heterostructure'
+left='EuGdO-LR'
+right='Gadolinium'
+positive={}
+positive['impurity']='Gd'
+positive['ncc_gad']=0.9952
+positive['Jcf']=0.0405
+#positive['Rmax']=10
+positive['eta']=1E-4
+positive['magnsub']=True
+positive['Jcfs']=0.03036
+positive['J4fs']=0.0
+positive['mirror']=True
+positive['insulator']=False
+positive['longrange']=True
+positive.update(common_positive)
+negative={}
+negative['N0']=0
+physical_systems.append(physical_system (name, material_class, positive, negative, (left,right)))
+
+
 # HeisenbergMetal-Metal-Heterostructure with long range RKKY coupling
 name='HeisenbergMetal-Metal-Heterostructure-LR'
 material_class='heterostructure'
@@ -430,6 +495,7 @@ positive['eta']=0.0
 positive['mirror']=True
 positive['insulator']=False
 positive['longrange']=True
+positive['magnsub']=False
 positive.update(common_positive)
 negative={}
 negative['N0']=0
