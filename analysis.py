@@ -129,6 +129,8 @@ the last values e.g. "all 5 all 0.01
 	parser.add_argument('--tsteps', nargs='*', default=None, help='Temperture steps for tc search (optional, only for tc)', type=float)
 	parser.add_argument('--dM', default=None, help='Magnetisation resolution for tc search (optional, only for tc)', type=float)
 	parser.add_argument('--layer', default=0, help='Layer to calculate parallel conductivity/resistivity in', type=int)
+	parser.add_argument('--layerx', help='First layer for perpendicular conductivity/resistivity', type=int)
+	parser.add_argument('--layery', help='First layer for perpendicular conductivity/resistivity', type=int)
 	
 	args = parser.parse_args()
 
@@ -297,26 +299,49 @@ the last values e.g. "all 5 all 0.01
 
 
 			if args.keyword=='cond_perp':
-				outfile="%s/%s_%s.dat" % (suboutput, args.keyword, namestr)
-				f=open(outfile, 'w')
-				for td in temperature_datasets:
-					temperature_folder=db.get_temp_output(td[len(corenames)-1])
-					filename="%s/%s/%s/%s/results/%s.dat" % (resultFolder, subResultFolder, material_folder, temperature_folder, 'cond_perp')
-					value=float(read(filename, line=0)[0])
-					temp=td[len(corenames)-1]
-					f.write("%0.17e\t%0.17e\n" % (temp, value))
-				f.close()
+				if args.layerx==None or args.layery==None:
+					outfile="%s/%s_%s.dat" % (suboutput, args.keyword, namestr)
+					f=open(outfile, 'w')
+					for td in temperature_datasets:
+						temperature_folder=db.get_temp_output(td[len(corenames)-1])
+						filename="%s/%s/%s/%s/results/%s.dat" % (resultFolder, subResultFolder, material_folder, temperature_folder, 'cond_perp')
+						value=float(read(filename, line=0)[0])
+						temp=td[len(corenames)-1]
+						f.write("%0.17e\t%0.17e\n" % (temp, value))
+					f.close()
+				else:
+					outfile="%s/%s_%s_%03i_%03i.dat" % (suboutput, args.keyword, namestr, args.layerx, args.layery)
+					f=open(outfile, 'w')
+					for td in temperature_datasets:
+						temperature_folder=db.get_temp_output(td[len(corenames)-1])
+						filename="%s/%s/%s/%s/results/%s.dat" % (resultFolder, subResultFolder, material_folder, temperature_folder, 'cond_perp_matrix')
+						value=float(read(filename, line=args.layerx)[args.layery])
+						temp=td[len(corenames)-1]
+						f.write("%0.17e\t%0.17e\n" % (temp, value))
+					f.close()
 
 			if args.keyword=='resist_perp':
-				outfile="%s/%s_%s.dat" % (suboutput, args.keyword, namestr)
-				f=open(outfile, 'w')
-				for td in temperature_datasets:
-					temperature_folder=db.get_temp_output(td[len(corenames)-1])
-					filename="%s/%s/%s/%s/results/%s.dat" % (resultFolder, subResultFolder, material_folder, temperature_folder, 'resist_perp')
-					value=float(read(filename, line=0)[0])
-					temp=td[len(corenames)-1]
-					f.write("%0.17e\t%0.17e\n" % (temp, value))
-				f.close()
+				if args.layerx==None or args.layery==None:
+					outfile="%s/%s_%s.dat" % (suboutput, args.keyword, namestr)
+					f=open(outfile, 'w')
+					for td in temperature_datasets:
+						temperature_folder=db.get_temp_output(td[len(corenames)-1])
+						filename="%s/%s/%s/%s/results/%s.dat" % (resultFolder, subResultFolder, material_folder, temperature_folder, 'resist_perp')
+						value=float(read(filename, line=0)[0])
+						temp=td[len(corenames)-1]
+						f.write("%0.17e\t%0.17e\n" % (temp, value))
+					f.close()
+				else:
+					outfile="%s/%s_%s_%03i_%03i.dat" % (suboutput, args.keyword, namestr, args.layerx, args.layery)
+					print outfile
+					f=open(outfile, 'w')
+					for td in temperature_datasets:
+						temperature_folder=db.get_temp_output(td[len(corenames)-1])
+						filename="%s/%s/%s/%s/results/%s.dat" % (resultFolder, subResultFolder, material_folder, temperature_folder, 'cond_perp_matrix')
+						value=float(read(filename, line=args.layerx)[args.layery])
+						temp=td[len(corenames)-1]
+						f.write("%0.17e\t%0.17e\n" % (temp, 1.0/value))
+					f.close()
 
 			if args.keyword=='isodelta':
 				outfile="%s/%s_%s.dat" % (suboutput, args.keyword, namestr)
