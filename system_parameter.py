@@ -124,6 +124,24 @@ positive.update(common_positive)
 negative={}
 physical_systems.append(physical_system (name, material_class, positive, negative))
 
+# Kondometal
+EdKondoValues=(0.5,0.6,0.7,0.8,0.9)
+for Ed in EdKondoValues:
+	name='Bulk-KondoMetal-Ed%06.4f' % Ed
+	material_class='bulk'
+	positive={}
+	positive['N']=1
+	positive['N0']=0
+	positive['impurity']='Gd'
+	positive['ncc_gad']=1.0
+	positive['Jcf']=0.00
+	positive['eta']=1E-9
+	positive.update(common_positive)
+	positive['Ed0']=Ed
+	positive['kondo']=True
+	negative={}
+	physical_systems.append(physical_system (name, material_class, positive, negative))
+
 # EuGdO with various impurity energies
 EdValues=(-0.00,-0.01,-0.02,-0.03,-0.04,-0.05,-0.06,-0.1,-0.15)
 for Ed in EdValues:
@@ -235,6 +253,23 @@ positive.update(common_positive)
 negative={}
 physical_systems.append(physical_system (name, material_class, positive, negative))
 
+# Kondometal
+for Ed in EdKondoValues:
+	name='KondoMetal-Ed%06.4f' % Ed
+	material_class='isolated'
+	positive={}
+	positive['N0']=0
+	positive['impurity']='Gd'
+	positive['ncc_gad']=1.0
+	positive['Jcf']=0.00
+	positive['eta']=1E-9
+	positive['mirror']=True
+	positive.update(common_positive)
+	positive['Ed0']=Ed
+	positive['kondo']=True
+	negative={}
+	physical_systems.append(physical_system (name, material_class, positive, negative))
+
 #######################################
 ### Two component heterostructures ####
 #######################################
@@ -251,11 +286,11 @@ positive['eta']=1E-6
 positive['mirror']=True
 positive['insulator']=False
 positive['magnsub']=False
+positive['kondosub']=False
 positive.update(common_positive)
 negative={}
 negative['N0']=0
 physical_systems.append(physical_system (name, material_class, positive, negative, (left,right)))
-
 
 # EuGdO-Metal-Heterostructure
 name='EuGdO-Metal-Heterostructure-eta1e-4'
@@ -270,10 +305,32 @@ positive['eta']=1E-4
 positive['mirror']=True
 positive['insulator']=False
 positive['magnsub']=False
+positive['kondosub']=False
 positive.update(common_positive)
 negative={}
 negative['N0']=0
 physical_systems.append(physical_system (name, material_class, positive, negative, (left,right)))
+
+# EuGdO-KondoMetal-Heterostructure
+for Ed in EdKondoValues:
+	name='EuGdO-KondoMetal-Edr%06.4f-Heterostructure-eta1e-4' % Ed
+	material_class='heterostructure'
+	left='EuGdO'
+	right='KondoMetal-Ed%06.4f' % Ed
+	positive={}
+	positive['impurity']='Gd'
+	positive['ncc_gad']=0.9952
+	positive['Jcf']=0.05
+	positive['eta']=1E-4
+	positive['mirror']=True
+	positive['insulator']=False
+	positive['magnsub']=False
+	positive['kondosub']=True
+	positive['Ed0r']=Ed
+	positive.update(common_positive)
+	negative={}
+	negative['N0']=0
+	physical_systems.append(physical_system (name, material_class, positive, negative, (left,right)))
 
 # EuGdO-HeisenbergMetal-Heterostructure
 name='EuGdO-HeisenbergMetal-Heterostructure-eta1e-4'
@@ -290,6 +347,7 @@ positive['magnsub']=True
 positive['Jcfs']=0.05
 positive['J4fs']=7E-5
 positive['insulator']=False
+positive['kondosub']=False
 positive.update(common_positive)
 negative={}
 negative['N0']=0
@@ -307,6 +365,7 @@ positive['eta']=0.0
 positive['mirror']=True
 positive['insulator']=False
 positive['magnsub']=False
+positive['kondosub']=False
 positive.update(common_positive)
 negative={}
 negative['N0']=0
@@ -324,6 +383,7 @@ positive['eta']=0.0
 positive['mirror']=True
 positive['insulator']=False
 positive['magnsub']=False
+positive['kondosub']=False
 positive.update(common_positive)
 negative={}
 negative['N0']=0
@@ -477,6 +537,7 @@ positive['mirror']=True
 positive['insulator']=False
 positive['longrange']=True
 positive['magnsub']=False
+positive['kondosub']=False
 positive.update(common_positive)
 negative={}
 negative['N0']=0
@@ -494,6 +555,7 @@ positive['Jcf']=0.0405
 #positive['Rmax']=10
 positive['eta']=1E-4
 positive['magnsub']=True
+positive['kondosub']=False
 positive['Jcfs']=0.0405
 positive['J4fs']=7E-5
 positive['mirror']=True
@@ -516,6 +578,7 @@ positive['Jcf']=0.0405
 #positive['Rmax']=10
 positive['eta']=1E-4
 positive['magnsub']=True
+positive['kondosub']=False
 positive['Jcfs']=0.03036
 positive['J4fs']=0.0
 positive['mirror']=True
@@ -541,6 +604,7 @@ positive['mirror']=True
 positive['insulator']=False
 positive['longrange']=True
 positive['magnsub']=False
+positive['kondosub']=False
 positive.update(common_positive)
 negative={}
 negative['N0']=0
@@ -632,6 +696,9 @@ class system_parameter:
 		self.mirror              =    option_exists(runcmd, ('-s','--mirror'))
 		self.hcp                 =    option_exists(runcmd, ('--hcp',))
 		self.hcpsub              =    option_exists(runcmd, ('--hcpsub',))
+		self.kondo               =    option_exists(runcmd, ('--kondo',))
+		self.kondosub            =    option_exists(runcmd, ('--kondosub',))
+		self.Ed0r                = float(get_option(runcmd, ('--Ed0r',),                               0.5))
 		self.ncc_oxy             = float(get_option(runcmd, ('--ncc_oxy',),                        0.9864))
 		self.ncc_gad             = float(get_option(runcmd, ('--ncc_gad',),                        0.9952))
 		self.n_cr                = float(get_option(runcmd, ('--n_cr',),                             0.01))
@@ -749,6 +816,14 @@ class system_parameter:
 		self.hcpsub=False
 		if parameterExists(parafilename, 'hcpsub'):
 			self.hcpsub=True
+		self.kondo=False
+		if parameterExists(parafilename, 'kondo'):
+			self.kondo=True
+		self.kondosub=False
+		if parameterExists(parafilename, 'kondosub'):
+			self.kondosub=True
+		if parameterExists(parafilename, 'Ed0r'):
+			self.Ed0r      = float(extractParameter(parafilename, 'Ed0r'              ))
 		self.D0l=1.0
 		self.D0r=1.0
 		if parameterExists(parafilename, 'D0l'):
