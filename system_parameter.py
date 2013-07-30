@@ -67,11 +67,35 @@ positive['N0']=0
 positive['impurity']='None'
 positive['Jcf']=0.03036
 positive['eta']=0.0
-positive['longrange']=True
 positive.update(common_positive)
 positive['J4f']=0.0
+positive['longrange']=True
+positive['hcp']=False
+positive['hcpsub']=False
 negative={}
 physical_systems.append(physical_system (name, material_class, positive, negative))
+
+# bulk Gadolinium with HCP lattice
+name='Bulk-Gadolinium-HCP'
+material_class='bulk'
+positive={}
+positive['N']=1
+positive['N0']=0
+positive['impurity']='None'
+positive['Jcf']=0.03036
+positive['eta']=0.0
+positive['longrange']=True
+positive['D0l']=2.985
+positive.update(common_positive)
+positive['J4f']=0.0
+positive['hcp']=True
+positive['hcpsub']=True
+positive['omega_min']=-8.0
+positive['omega_max']=8.0
+negative={}
+physical_systems.append(physical_system (name, material_class, positive, negative))
+
+
 
 # bulk heisenberg-metal
 name='Bulk-Heisenberg-Metal'
@@ -390,12 +414,33 @@ positive['Jcf']=0.03036
 positive['eta']=0.0
 positive['mirror']=True
 positive['longrange']=True
+positive['hcp']=False
+positive['hcpsub']=False
 positive.update(common_positive)
 positive['J4f']=0.0
 negative={}
 physical_systems.append(physical_system (name, material_class, positive, negative))
 
-
+# Gadolinium with HCP lattice
+name='Gadolinium-HCP'
+material_class='isolated'
+positive={}
+positive['N0']=0
+positive['impurity']='None'
+positive['Jcf']=0.03036
+#positive['Rmax']=10
+positive['eta']=0.0
+positive['mirror']=True
+positive['longrange']=True
+positive.update(common_positive)
+positive['J4f']=0.0
+positive['hcp']=True
+positive['hcpsub']=True
+positive['D0l']=2.985
+positive['omega_min']=-8.0
+positive['omega_max']=8.0
+negative={}
+physical_systems.append(physical_system (name, material_class, positive, negative))
 
 # EuGdO with long range RKKY coupling
 name='EuGdO-LR'
@@ -585,6 +630,8 @@ class system_parameter:
 		if option_exists(runcmd, ('-i','--input')):
 			self.input       =      (get_option(runcmd, ('-i','--input')))
 		self.mirror              =    option_exists(runcmd, ('-s','--mirror'))
+		self.hcp                 =    option_exists(runcmd, ('--hcp',))
+		self.hcpsub              =    option_exists(runcmd, ('--hcpsub',))
 		self.ncc_oxy             = float(get_option(runcmd, ('--ncc_oxy',),                        0.9864))
 		self.ncc_gad             = float(get_option(runcmd, ('--ncc_gad',),                        0.9952))
 		self.n_cr                = float(get_option(runcmd, ('--n_cr',),                             0.01))
@@ -596,6 +643,8 @@ class system_parameter:
 		self.spin0               = float(get_option(runcmd, ('--spin0',),                             0.0))
 		self.Ul                  = float(get_option(runcmd, ('--Ul',),                                0.0))
 		self.Ur                  = float(get_option(runcmd, ('--Ur',),                                0.0))
+		self.D0l                 = float(get_option(runcmd, ('--D0l',),                               1.0))
+		self.D0r                 = float(get_option(runcmd, ('--D0r',),                               1.0))
 		self.Delta_l0            = float(get_option(runcmd, ('--Delta_l0',),                          0.0))
 		self.Delta_r0            = float(get_option(runcmd, ('--Delta_r0',),                          0.0))
 		self.Delta_W             = float(get_option(runcmd, ('--Delta_W',),                           0.0))
@@ -694,6 +743,18 @@ class system_parameter:
 		self.no_cleaning=False
 		if parameterExists(parafilename, 'no_cleaning'):
 			self.no_cleaning=True
+		self.hcp=False
+		if parameterExists(parafilename, 'hcp'):
+			self.hcp=True
+		self.hcpsub=False
+		if parameterExists(parafilename, 'hcpsub'):
+			self.hcpsub=True
+		self.D0l=1.0
+		self.D0r=1.0
+		if parameterExists(parafilename, 'D0l'):
+			self.D0l       = float(extractParameter(parafilename, 'D0l'               ))
+		if parameterExists(parafilename, 'D0r'):
+			self.D0r       = float(extractParameter(parafilename, 'D0r'               ))
 		self.longrange=False
 		self.Rmax=2.0
 		if parameterExists(parafilename, 'longrange'):
