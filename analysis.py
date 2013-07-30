@@ -8,6 +8,8 @@ import database
 import system_parameter
 import itertools
 import findtc
+import numpy.linalg as la
+import numpy as np
 
 def read(filename, line=0):
 	f=open(filename, 'r')
@@ -304,10 +306,13 @@ the last values e.g. "all 5 all 0.01
 					f=open(outfile, 'w')
 					for td in temperature_datasets:
 						temperature_folder=db.get_temp_output(td[len(corenames)-1])
-						filename="%s/%s/%s/%s/results/%s.dat" % (resultFolder, subResultFolder, material_folder, temperature_folder, 'cond_perp')
-						value=float(read(filename, line=0)[0])
+						filename="%s/%s/%s/%s/results/%s.dat" % (resultFolder, subResultFolder, material_folder, temperature_folder, 'cond_perp_matrix')
+						# read in conductivity matrix
+						cmat=np.loadtxt(filename)
+						# sum over all entries
+						cond_perp=np.sum(cmat)
 						temp=td[len(corenames)-1]
-						f.write("%0.17e\t%0.17e\n" % (temp, value))
+						f.write("%0.17e\t%0.17e\n" % (temp, cond_perp))
 					f.close()
 				else:
 					outfile="%s/%s_%s_%03i_%03i.dat" % (suboutput, args.keyword, namestr, args.layerx, args.layery)
@@ -326,10 +331,15 @@ the last values e.g. "all 5 all 0.01
 					f=open(outfile, 'w')
 					for td in temperature_datasets:
 						temperature_folder=db.get_temp_output(td[len(corenames)-1])
-						filename="%s/%s/%s/%s/results/%s.dat" % (resultFolder, subResultFolder, material_folder, temperature_folder, 'resist_perp')
-						value=float(read(filename, line=0)[0])
+						filename="%s/%s/%s/%s/results/%s.dat" % (resultFolder, subResultFolder, material_folder, temperature_folder, 'cond_perp_matrix')
+						# read in conductivity matrix
+						cmat=np.loadtxt(filename)
+						# invert conductivity matrix
+						icmat=la.inv(cmat)
+						# sum over all entries
+						resist_perp=np.sum(icmat)
 						temp=td[len(corenames)-1]
-						f.write("%0.17e\t%0.17e\n" % (temp, value))
+						f.write("%0.17e\t%0.17e\n" % (temp, resist_perp))
 					f.close()
 				else:
 					outfile="%s/%s_%s_%03i_%03i.dat" % (suboutput, args.keyword, namestr, args.layerx, args.layery)
