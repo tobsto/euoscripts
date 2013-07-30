@@ -1,0 +1,26 @@
+#!/usr/bin/python
+
+import argparse
+from pylab import loadtxt
+
+def main():
+	parser = argparse.ArgumentParser(description='Calculate cumulative sum of a x-y-dataset and save is in a new dataset')
+	parser.add_argument('-i','--input', help='Input file')
+	parser.add_argument('-o','--output', help='Output file')
+
+	args = parser.parse_args()
+	data=loadtxt(args.input)
+	cumusum=0.0
+	c=[]
+	for x,y in zip(data[:,0], data[:,1]):
+		cumusum=cumusum+y
+		c.append(cumusum)
+	print "Cumulative sum of y-column: ", cumusum
+	if args.output!=None:
+		f = open(args.output, 'w')
+		for x,cs in zip(data[:,0], c):
+			f.write("%e\t%e\n" % (x, cs))
+		f.close()
+
+if __name__=="__main__":
+	main()
