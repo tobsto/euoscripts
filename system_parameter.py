@@ -41,6 +41,7 @@ common_positive['dntol']=1E-6
 common_positive['fltol']=1E-7
 common_positive['tol']=1E-3
 common_positive['twod']=False
+#common_positive['B']=0.0
 
 #######################################
 ### Bulk materials ####################
@@ -124,8 +125,26 @@ positive.update(common_positive)
 negative={}
 physical_systems.append(physical_system (name, material_class, positive, negative))
 
+# EuGdO with external magnetic field
+#Bvalues=(1E-9,1E-8,1E-7,2E-7,5E-7,1E-6,2E-6,5E-6,1E-5,2E-5,5E-5,1E-4,2E-4,5E-4,1E-3,2E-3,5E-3,1E-2)
+#for B in Bvalues:
+#	name='Bulk-EuGdO-B%0.8f' % B
+#	material_class='bulk'
+#	positive={}
+#	positive['N']=1
+#	positive['N0']=0
+#	positive['impurity']='Gd'
+#	positive['ncc_gad']=0.9952
+#	positive['Jcf']=0.05
+#	positive['eta']=1E-9
+#	positive.update(common_positive)
+#	positive['B']=B
+#	negative={}
+#	physical_systems.append(physical_system (name, material_class, positive, negative))
+
+
 # Kondometal
-EdKondoValues=(0.5,0.6,0.7,0.8,0.9)
+EdKondoValues=(0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9)
 for Ed in EdKondoValues:
 	name='Bulk-KondoMetal-Ed%06.4f' % Ed
 	material_class='bulk'
@@ -286,6 +305,7 @@ positive['eta']=1E-6
 positive['mirror']=True
 positive['insulator']=False
 positive['magnsub']=False
+positive['ifcoupl']=False
 positive['kondosub']=False
 positive.update(common_positive)
 negative={}
@@ -305,11 +325,36 @@ positive['eta']=1E-4
 positive['mirror']=True
 positive['insulator']=False
 positive['magnsub']=False
+positive['ifcoupl']=False
 positive['kondosub']=False
 positive.update(common_positive)
 negative={}
 negative['N0']=0
 physical_systems.append(physical_system (name, material_class, positive, negative, (left,right)))
+
+# EuGdO-Metal-Heterostructure with intensified interface coupling
+JcfpValues=(0.01, 0.02, 0.03, 0.04, 0.0405, 0.05)
+for Jcfp in JcfpValues:
+	name='EuGdO-Metal-Heterostructure-eta1e-4-IIC-Jcfp%06.4f' % Jcfp
+	material_class='heterostructure'
+	left='EuGdO'
+	right='Metal'
+	positive={}
+	positive['impurity']='Gd'
+	positive['ncc_gad']=0.9952
+	positive['Jcf']=0.05
+	positive['eta']=1E-4
+	positive['mirror']=True
+	positive['insulator']=False
+	positive['magnsub']=False
+	positive['ifcoupl']=True
+	positive['Jcfp']=Jcfp
+	positive['kondosub']=False
+	positive.update(common_positive)
+	negative={}
+	negative['N0']=0
+	physical_systems.append(physical_system (name, material_class, positive, negative, (left,right)))
+
 
 # EuGdO-KondoMetal-Heterostructure
 for Ed in EdKondoValues:
@@ -325,6 +370,7 @@ for Ed in EdKondoValues:
 	positive['mirror']=True
 	positive['insulator']=False
 	positive['magnsub']=False
+	positive['ifcoupl']=False
 	positive['kondosub']=True
 	positive['Ed0r']=Ed
 	positive.update(common_positive)
@@ -344,6 +390,7 @@ positive['Jcf']=0.05
 positive['eta']=1E-4
 positive['mirror']=True
 positive['magnsub']=True
+positive['ifcoupl']=False
 positive['Jcfs']=0.05
 positive['J4fs']=7E-5
 positive['insulator']=False
@@ -365,6 +412,7 @@ positive['eta']=0.0
 positive['mirror']=True
 positive['insulator']=False
 positive['magnsub']=False
+positive['ifcoupl']=False
 positive['kondosub']=False
 positive.update(common_positive)
 negative={}
@@ -383,6 +431,7 @@ positive['eta']=0.0
 positive['mirror']=True
 positive['insulator']=False
 positive['magnsub']=False
+positive['ifcoupl']=False
 positive['kondosub']=False
 positive.update(common_positive)
 negative={}
@@ -537,11 +586,37 @@ positive['mirror']=True
 positive['insulator']=False
 positive['longrange']=True
 positive['magnsub']=False
+positive['ifcoupl']=False
 positive['kondosub']=False
 positive.update(common_positive)
 negative={}
 negative['N0']=0
 physical_systems.append(physical_system (name, material_class, positive, negative, (left,right)))
+
+# EuGdO-Metal-Heterostructure with long range RKKY coupling and intensified interface coupling
+for Jcfp in JcfpValues:
+	name='EuGdO-Metal-Heterostructure-eta1e-4-LR-IIC-Jcfp%06.4f' % Jcfp
+	material_class='heterostructure'
+	left='EuGdO-LR'
+	right='Metal'
+	positive={}
+	positive['impurity']='Gd'
+	positive['ncc_gad']=0.9952
+	positive['Jcf']=0.0405
+	#positive['Rmax']=10
+	positive['eta']=1E-4
+	positive['mirror']=True
+	positive['insulator']=False
+	positive['longrange']=True
+	positive['magnsub']=False
+	positive['ifcoupl']=True
+	positive['Jcfp']=Jcfp
+	positive['kondosub']=False
+	positive.update(common_positive)
+	negative={}
+	negative['N0']=0
+	physical_systems.append(physical_system (name, material_class, positive, negative, (left,right)))
+
 
 # EuGdO-HeisenbergMetal-Heterostructure with long range RKKY coupling
 name='EuGdO-HeisenbergMetal-Heterostructure-eta1e-4-LR'
@@ -555,6 +630,7 @@ positive['Jcf']=0.0405
 #positive['Rmax']=10
 positive['eta']=1E-4
 positive['magnsub']=True
+positive['ifcoupl']=False
 positive['kondosub']=False
 positive['Jcfs']=0.0405
 positive['J4fs']=7E-5
@@ -578,6 +654,7 @@ positive['Jcf']=0.0405
 #positive['Rmax']=10
 positive['eta']=1E-4
 positive['magnsub']=True
+positive['ifcoupl']=False
 positive['kondosub']=False
 positive['Jcfs']=0.03036
 positive['J4fs']=0.0
@@ -604,6 +681,7 @@ positive['mirror']=True
 positive['insulator']=False
 positive['longrange']=True
 positive['magnsub']=False
+positive['ifcoupl']=False
 positive['kondosub']=False
 positive.update(common_positive)
 negative={}
@@ -744,7 +822,10 @@ class system_parameter:
 		self.magnsub             =    option_exists(runcmd, ('--magnsub',))
 		self.J4fs                = float(get_option(runcmd, ('--J4fs',),                             7E-5))
 		self.Jcfs                = float(get_option(runcmd, ('--Jcfs',),                             5E-2))
+		self.ifcoupl             =    option_exists(runcmd, ('--ifcoupl',))
+		self.Jcfp                = float(get_option(runcmd, ('--Jcfp',),                             1E-2))
 		self.Delta_m             = float(get_option(runcmd, ('--Delta_m',),                           0.0))
+		self.B                   = float(get_option(runcmd, ('--B',),                                 0.0))
 
 	# read in parameter file and map this onto a material class.
 	def read_file(self, parafilename):
@@ -842,8 +923,15 @@ class system_parameter:
 			self.magnsub = True
 			self.J4fs    = float(extractParameter(parafilename, 'J4fs'                ))
 			self.Jcfs    = float(extractParameter(parafilename, 'Jcfs'                ))
+		self.ifcoupl=False
+		self.Jcfp=1E-2
+		if parameterExists(parafilename, 'ifcoupl'):
+			self.ifcoupl = True
+			self.Jcfp    = float(extractParameter(parafilename, 'Jcfp'                ))
 		if parameterExists(parafilename, 'Delta_m'):
 			self.Delta_m = float(extractParameter(parafilename, 'Delta_m'             ))
+		if parameterExists(parafilename, 'B'):
+			self.B       = float(extractParameter(parafilename, 'B'                   ))
 
 	def match(self, key, value):
 		saved_value=eval('self.%s' % key)
