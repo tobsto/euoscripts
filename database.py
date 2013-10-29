@@ -83,9 +83,9 @@ workers.append(worker(	'pfaffenschlag',
 			'/home/stollenw/runs/',	
 			'/users/stollenw/runs/', 'mpirun --hostfile /users/stollenw/runs/hostfile_schlag'))
 workers.append(worker(	'lunzamsee',
-			'/home/stollenw/runs/',
-			'/users/stollenw/runs/',
-			'mpirun --hostfile /users/stollenw/runs/hostfile_lunz'))
+			'/home/stollenw/runs/lunz/',
+			'/ext/stollenw/',
+			'mpirun --hostfile /ext/stollenw/hostfile'))
 workers.append(worker(	'stleonhardamforst',	
 			'/home/stollenw/runs/',
 			'/users/stollenw/runs/',
