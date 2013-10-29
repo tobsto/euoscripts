@@ -124,9 +124,9 @@ the last values e.g. "all 5 all 0.01
 	parser.add_argument('keyword', help=keyword_help)
 	parser.add_argument('-d', '--database', help='Type of database: "bulk", "isolated" or "hetero"')
 	parser.add_argument('-s', '--dataset', nargs='*', help=dataset_help)
-	parser.add_argument('-o', '--output', default='/home/stollenw/projects/euo/analysis/', help='Output folder (optional)')
+	parser.add_argument('-o', '--output', default='/users/stollenw/projects/euo/analysis/', help='Output folder (optional)')
 	parser.add_argument('--dbpath', help='Path to database file (optional)')
-	parser.add_argument('--resultpath', default='/home/stollenw/projects/euo/results/', help='Path to results (optional)')
+	parser.add_argument('--resultpath', default='/users/stollenw/projects/euo/results/', help='Path to results (optional)')
 	parser.add_argument('--temperatures', nargs='*', default=None, help='Tempertures for tc search (optional, only for tc)', type=float)
 	parser.add_argument('--tsteps', nargs='*', default=None, help='Temperture steps for tc search (optional, only for tc)', type=float)
 	parser.add_argument('--dM', default=None, help='Magnetisation resolution for tc search (optional, only for tc)', type=float)
@@ -194,7 +194,7 @@ the last values e.g. "all 5 all 0.01
 	if args.dbpath==None:
 		db.download()
 	else:
-		db.download("stollenw@heisenberg.physik.uni-bonn.de:%s" % args.dbpath)
+		db.download("stollenw@steinschal-tradigist.th.physik.uni-bonn.de:%s" % args.dbpath)
 
 	resultFolder=args.resultpath
 

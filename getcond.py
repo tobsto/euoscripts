@@ -33,12 +33,12 @@ def getcond(inputFolder, mpicmd, np=1, isodeltadb=False, outputFolder=None):
 	subprocess.call(runcmd, shell=True)
 
 def getcondremote(host, db, filenames, inputFolder, mpicmd, np=1, isodeltadb=False, outputFolder=None):
-	if host=='heisenberg':
+	if host=='steinschal-tradigist':
 		getcond(inputFolder, mpicmd, np, isodeltadb, outputFolder)
 	else:
 		print "download ..."
-		cmd = "rsync -avz stollenw@heisenberg.physik.uni-bonn.de:%s/results temp_cond/" % inputFolder
-		cmd = cmd+ "; rsync -avz stollenw@heisenberg.physik.uni-bonn.de:%s/parameter.cfg temp_cond/" % inputFolder
+		cmd = "rsync -avz stollenw@steinschal-tradigist.th.physik.uni-bonn.de:%s/results temp_cond/" % inputFolder
+		cmd = cmd+ "; rsync -avz stollenw@steinschal-tradigist.th.physik.uni-bonn.de:%s/parameter.cfg temp_cond/" % inputFolder
 		#print cmd
 		proc = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE)
 		proc.communicate()
@@ -50,7 +50,7 @@ def getcondremote(host, db, filenames, inputFolder, mpicmd, np=1, isodeltadb=Fal
 		cmd='scp '
 		for filename in filenames:
 			cmd=cmd+"temp_cond/results/%s " % filename
-		cmd=cmd+"stollenw@heisenberg.physik.uni-bonn.de:%s/results/" % inputFolder
+		cmd=cmd+"stollenw@steinschal-tradigist.th.physik.uni-bonn.de:%s/results/" % inputFolder
 
 		#print cmd
 		proc = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE)
@@ -59,10 +59,10 @@ def getcondremote(host, db, filenames, inputFolder, mpicmd, np=1, isodeltadb=Fal
 				
 
 def check_file_exists(host, path):
-	if host=='heisenberg':
+	if host=='steinschal-tradigist':
 		return os.path.exists(path)
 	else:
-		cmd = "ssh %s '[[ -f %s ]]'" % ('stollenw@heisenberg.physik.uni-bonn.de', path)
+		cmd = "ssh %s '[[ -f %s ]]'" % ('stollenw@steinschal-tradigist.th.physik.uni-bonn.de', path)
 		proc = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE)
 		proc.communicate()
 		if proc.returncode==0:
@@ -84,7 +84,7 @@ def main():
 	args = parser.parse_args()
 	
 
-	# remote or heisenberg
+	# remote or steinschal-tradigist
 	host=database.get_host()
 	# get mpi run command depening on host
 	mpicmd=get_worker().mpicmd
@@ -106,16 +106,16 @@ def main():
 			db=database.bulk_database()	
 			corenames=('material', 'ni', 'T')
 			filenames=("cond.dat", "resist.dat")
-			top_result_folder = "/home/stollenw/projects/euo/results/bulk/"
+			top_result_folder = "/users/stollenw/projects/euo/results/bulk/"
 		elif args.database=='isolated':
 			db=database.isolated_database()	
 			corenames=('material', 'N', 'ni', 'T')
-			top_result_folder = "/home/stollenw/projects/euo/results/isolated/"
+			top_result_folder = "/users/stollenw/projects/euo/results/isolated/"
 			filenames=("cond.dat", "resist.dat", "cond_perp.dat", "resist_perp.dat", "cond_perp_matrix.dat", "resist_perp_matrix.dat")
 		else:
 			db=database.heterostructure_database()	
 			corenames=('material', 'N', 'M', 'ni', 'ncr', 'dW', 'T')
-			top_result_folder = "/home/stollenw/projects/euo/results/heterostructure/"
+			top_result_folder = "/users/stollenw/projects/euo/results/heterostructure/"
 			filenames=("cond.dat", "resist.dat", "cond_perp.dat", "resist_perp.dat", "cond_perp_matrix.dat", "resist_perp_matrix.dat")
 			isodeltadb=args.no_isodelta_db
 		db.download()

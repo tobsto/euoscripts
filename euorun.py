@@ -430,7 +430,7 @@ class euorun:
 		if os.path.exists(magfile):
 			return float(database.extractResultValue2ndColumn(magfile))
 		else:
-			cmd = "scp stollenw@heisenberg.physik.uni-bonn.de:/home/stollenw/projects/euo/results/%s/%s temp_magfile.dat" % (self.material_class, magfile)
+			cmd = "scp stollenw@steinschal-tradigist.th.physik.uni-bonn.de:/users/stollenw/projects/euo/results/%s/%s temp_magfile.dat" % (self.material_class, magfile)
 			proc = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE)
 			proc.communicate()
 			mag=float(database.extractResultValue2ndColumn("temp_magfile.dat"))
@@ -477,7 +477,7 @@ class euorun:
 		f.write("%0.17e\n" % tc)
 		f.close()
 		if self.updatedbFlag:
-			cmd = "scp %s stollenw@heisenberg.physik.uni-bonn.de:/home/stollenw/projects/euo/results/%s/%s/" % (local_file, self.material_class, self.output)
+			cmd = "scp %s stollenw@steinschal-tradigist.th.physik.uni-bonn.de:/users/stollenw/projects/euo/results/%s/%s/" % (local_file, self.material_class, self.output)
 			proc = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE)
 			proc.communicate()
 		

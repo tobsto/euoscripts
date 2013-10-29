@@ -59,45 +59,22 @@ class worker:
 		self.mpicmd=mpicmd
 workers=[]
 
-workers.append(worker(	'heisenberg', 
-	 		'/home/stollenw/runs/',
-			'/home/stollenw/runs/',
-			 'mpirun'))
 workers.append(worker(	'agem.th.physik.uni-bonn.de',
-			'/home/stollenw/runs/agem/',
+			'/users/stollenw/runs/agem/',
 			'/home/stollenw/',
 			'mpirun --hostfile /home/stollenw/hostfiles/hostfile_agem'))
 workers.append(worker(	'bgem.th.physik.uni-bonn.de',
-			'/home/stollenw/runs/bgem/',
+			'/users/stollenw/runs/bgem/',
 			'/home/stollenw/',
 			'mpirun --hostfile /home/stollenw/hostfiles/hostfile_bgem'))
 workers.append(worker(	'cgem.th.physik.uni-bonn.de',
-			'/home/stollenw/runs/cgem/',
+			'/users/stollenw/runs/cgem/',
 			'/home/stollenw/',
 			'mpirun --hostfile /home/stollenw/hostfiles/hostfile_cgem'))
-workers.append(worker(	'stgeorgenamreith',
-			'/home/stollenw/runs/georg/',
+workers.append(worker(	'steinschal-tradigist',
+			'/users/stollenw/runs/lunz/',
 			'/ext/stollenw/',
 			'mpirun --hostfile /ext/stollenw/hostfile'))
-workers.append(worker(	'pfaffenschlag',
-			'/home/stollenw/runs/',	
-			'/users/stollenw/runs/', 'mpirun --hostfile /users/stollenw/runs/hostfile_schlag'))
-workers.append(worker(	'lunzamsee',
-			'/home/stollenw/runs/lunz/',
-			'/ext/stollenw/',
-			'mpirun --hostfile /ext/stollenw/hostfile'))
-workers.append(worker(	'stleonhardamforst',	
-			'/home/stollenw/runs/',
-			'/users/stollenw/runs/',
-			'mpirun --hostfile /users/stollenw/runs/hostfile_leon'))
-workers.append(worker(	'bischofstetten',
-			'/home/stollenw/runs/',	
-			'/users/stollenw/runs/',
-			'mpirun --hostfile /users/stollenw/runs/hostfile_stetten'))
-workers.append(worker(	'login',
-			'/home/stollenw/runs/deb/',
-			'/checkpoints/',
-			'mpirun.openmpi --mca btl ^udapl,openib --mca btl_tcp_if_include eth0 -x LD_LIBRARY_PATH --hostfile /users/stollenw/hostfile'))
 
 # default iteration parameter for the different types of systems
 def get_iteration_parameter(system_name):
@@ -224,7 +201,7 @@ class bulk_database:
 			self.data.append((material, ni, T, mag, origin))
 
 	# read in database from remote file
-	def download(self, remotepath='stollenw@heisenberg.physik.uni-bonn.de:/home/stollenw/projects/euo/database/bulk.db'):
+	def download(self, remotepath='stollenw@steinschal-tradigist.th.physik.uni-bonn.de:/users/stollenw/projects/euo/database/bulk.db'):
 		cmd='scp %s bulk.db.temp' % remotepath
 		try:
 			proc = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE)
@@ -305,7 +282,7 @@ class bulk_database:
 	def get_temp_output(self, t):
 			return "t%07.3f/" % t
 	# archive results
-	def archive(self, dest='/home/stollenw/projects/euo/results/bulk/', dataset=None, special_path=None):
+	def archive(self, dest='/users/stollenw/projects/euo/results/bulk/', dataset=None, special_path=None):
 		if not os.path.exists(dest):
 			os.makedirs(dest)
 		# get filtered data, i.e. reduce to defining properties given by the dataset argument
@@ -339,7 +316,7 @@ class bulk_database:
 				print 'Break.'
 				exit(1)
 	# download results
-	def download_results(self, material, ni, T, dest, source='stollenw@heisenberg.physik.uni-bonn.de:/home/stollenw/projects/euo/results/bulk/'):
+	def download_results(self, material, ni, T, dest, source='stollenw@steinschal-tradigist.th.physik.uni-bonn.de:/users/stollenw/projects/euo/results/bulk/'):
 		for d in self.data:
 			if material==d[0] and ni==d[1] and T==d[2]:
 				source_path=source + self.get_output(d[0], d[1])
@@ -439,7 +416,7 @@ class isolated_database:
 			self.data.append((material, N, nc, T, Delta, origin))
 
 	# read in database from remote file
-	def download(self, remotepath='stollenw@heisenberg.physik.uni-bonn.de:/home/stollenw/projects/euo/database/isolated.db'):
+	def download(self, remotepath='stollenw@steinschal-tradigist.th.physik.uni-bonn.de:/users/stollenw/projects/euo/database/isolated.db'):
 		cmd='scp %s isolated.db.temp' % remotepath
 		try:
 			proc = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE)
@@ -527,7 +504,7 @@ class isolated_database:
 	def get_temp_output(self, t):
 			return "t%07.3f/" % t
 	# archive results
-	def archive(self, dest='/home/stollenw/projects/euo/results/isolated/', dataset=None, special_path=None):
+	def archive(self, dest='/users/stollenw/projects/euo/results/isolated/', dataset=None, special_path=None):
 		if not os.path.exists(dest):
 			os.makedirs(dest)
 		# get filtered data, i.e. reduce to defining properties given by the dataset argument
@@ -561,7 +538,7 @@ class isolated_database:
 				print 'Break.'
 				exit(1)
 	# download results
-	def download_results(self, material, N, nc, T, dest, source='stollenw@heisenberg.physik.uni-bonn.de:/home/stollenw/projects/euo/results/isolated/'):
+	def download_results(self, material, N, nc, T, dest, source='stollenw@steinschal-tradigist.th.physik.uni-bonn.de:/users/stollenw/projects/euo/results/isolated/'):
 		for d in self.data:
 			if material==d[0] and N==d[1] and nc==d[2] and T==d[3]:
 				source_path=source + self.get_output(d[0], d[1], d[2])
@@ -664,7 +641,7 @@ class heterostructure_database:
 			self.data.append((material, N, M, ni, ncr, dW, T, avmag, origin))
 
 	# read in database from remote file
-	def download(self, remotepath='stollenw@heisenberg.physik.uni-bonn.de:/home/stollenw/projects/euo/database/hetero.db'):
+	def download(self, remotepath='stollenw@steinschal-tradigist.th.physik.uni-bonn.de:/users/stollenw/projects/euo/database/hetero.db'):
 		cmd='scp %s hetero.db.temp' % remotepath
 		try:
 			proc = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE)
@@ -752,7 +729,7 @@ class heterostructure_database:
 	def get_temp_output(self, t):
 			return "t%07.3f/" % t
 	# archive results
-	def archive(self, dest='/home/stollenw/projects/euo/results/heterostructure/', dataset=None, special_path=None):
+	def archive(self, dest='/users/stollenw/projects/euo/results/heterostructure/', dataset=None, special_path=None):
 		if not os.path.exists(dest):
 			os.makedirs(dest)
 		# get filtered data, i.e. reduce to defining properties given by the dataset argument
@@ -785,7 +762,7 @@ class heterostructure_database:
 				print 'Break.'
 				exit(1)
 
-	def download_results(self, material, N, M, ni, ncr, dW, T, dest, source='stollenw@heisenberg.physik.uni-bonn.de:/home/stollenw/projects/euo/results/heterostructure/'):
+	def download_results(self, material, N, M, ni, ncr, dW, T, dest, source='stollenw@steinschal-tradigist.th.physik.uni-bonn.de:/users/stollenw/projects/euo/results/heterostructure/'):
 		for d in self.data:
 			if material==d[0] and N==d[1]  and M==d[2] and ni==d[3] and ncr==d[4] and dW==d[5] and T==d[6]:
 				source_path=source + self.get_output(d[0], d[1], d[2], d[3], d[4], d[5])
@@ -1228,7 +1205,7 @@ def add_input (runcmd, download_path=None, path=None, source=None, input_system_
 			
 def test():
 	idb=isolated_database()
-	idb.fill(('/home/stollenw/runs/runs_version-4e9912f/bgem/eugdo_n5_ni0.01/',))
+	idb.fill(('/users/stollenw/runs/runs_version-4e9912f/bgem/eugdo_n5_ni0.01/',))
 	#idb.archive()
 
 	sp=system_parameter()
@@ -1250,7 +1227,7 @@ def main():
 		parser.print_help()
 		exit(0)
 
-	resultFolder='/home/stollenw/projects/euo/results/'
+	resultFolder='/users/stollenw/projects/euo/results/'
 	db=None
 	corenames=None
 	special=None

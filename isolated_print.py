@@ -6,8 +6,8 @@ import os
 import database
 
 parser = argparse.ArgumentParser(description='Print database for energy shifts in EuO and substrate')
-parser.add_argument('-d', '--database', default='/home/stollenw/projects/euo/database/isolated.db', help='Database file name')
-parser.add_argument('-p', '--plotfolder', default='/home/stollenw/projects/euo/database/analysis/isolated/isodelta/', help='Database file name')
+parser.add_argument('-d', '--database', default='/users/stollenw/projects/euo/database/isolated.db', help='Database file name')
+parser.add_argument('-p', '--plotfolder', default='/users/stollenw/projects/euo/database/analysis/isolated/isodelta/', help='Database file name')
 parser.add_argument('-s', '--short', action='store_true', help='Less output')
 args = parser.parse_args()
 
@@ -15,7 +15,7 @@ if not os.path.exists(args.plotfolder):
 	os.makedirs(args.plotfolder)
 
 database=database.isolated_database()
-if args.database!='/home/stollenw/projects/euo/database/isolated.db':
+if args.database!='/users/stollenw/projects/euo/database/isolated.db':
 	database.read(args.database)
 else:
 	database.download()

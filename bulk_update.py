@@ -19,11 +19,11 @@ the last values e.g. "all 0.01
 
 	parser = argparse.ArgumentParser(description='Update database for bulk results')
 	parser.add_argument('input', nargs='*', help='Folders containing results of bulk runs or folders containing subfolders with results')
-  	parser.add_argument('-d', '--database', default='/home/stollenw/projects/euo/database/bulk.db', help='Database file name')
+  	parser.add_argument('-d', '--database', default='/users/stollenw/projects/euo/database/bulk.db', help='Database file name')
 	parser.add_argument('-s', '--dataset', nargs='*', help=dataset_help)
   	parser.add_argument('--overwrite', action='store_true', help='Overwrite database')
   	parser.add_argument('--archive', action='store_true', help='Archive all results')
-  	parser.add_argument('--archive_destination', default='/home/stollenw/projects/euo/results/bulk/', help='Archive folder')
+  	parser.add_argument('--archive_destination', default='/users/stollenw/projects/euo/results/bulk/', help='Archive folder')
   	parser.add_argument('--dry', action='store_true', help='Simulate updating of database')
 
 	args = parser.parse_args()

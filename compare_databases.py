@@ -38,8 +38,8 @@ def main():
 	else:
 		print "Database type must be 'bulk', 'isolated' or 'hetero' (default). Break"
 		exit(1)
-	d1.download("stollenw@heisenberg.physik.uni-bonn.de:%s" % args.input[0])
-	d2.download("stollenw@heisenberg.physik.uni-bonn.de:%s" % args.input[1])
+	d1.download("stollenw@steinschal-tradigist.th.physik.uni-bonn.de:%s" % args.input[0])
+	d2.download("stollenw@steinschal-tradigist.th.physik.uni-bonn.de:%s" % args.input[1])
 
 	print "Datasets present in %s but not in %s:" % (args.input[0], args.input[1])
 	reduced_data2=[dset2[:length] for dset2 in d2.data]

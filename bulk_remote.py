@@ -31,7 +31,7 @@ def main():
 		print "Break."
 		exit(1)
 
-	# get path on heisenberg
+	# get path on steinschal-tradigist
 	inputs=[]
 	for ipath in args.input:
 		# get absolute path
@@ -41,7 +41,7 @@ def main():
 			exit(1)
 		inputs.append(apath.replace(clientdir, serverdir, 1))
 
-	cmd='/home/stollenw/projects/euo/tools/euoscripts/bulk_update.py'
+	cmd='/users/stollenw/projects/euo/tools/euoscripts/bulk_update.py'
 	for inp in inputs:
 		cmd+=" %s" % inp
 	if args.dry:
@@ -50,7 +50,7 @@ def main():
 		cmd+=" --archive"	
 
 	try:
-		rcmd=['ssh', 'heisenberg.physik.uni-bonn.de', '%s' % cmd]
+		rcmd=['ssh', 'steinschal-tradigist.th.physik.uni-bonn.de', '%s' % cmd]
 		subprocess.call(rcmd)
 	except:
 		print "Unable to update remote database. Break."

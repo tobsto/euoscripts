@@ -1,18 +1,13 @@
 #!/bin/bash
 
-echo "heisenberg: mount agem"
-ssh heisenberg.physik.uni-bonn.de 'mount /home/stollenw/runs/agem'
-echo "heisenberg: mount bgem"
-ssh heisenberg.physik.uni-bonn.de 'mount /home/stollenw/runs/bgem'
-echo "heisenberg: mount cgem"
-ssh heisenberg.physik.uni-bonn.de 'mount /home/stollenw/runs/cgem'
-echo "heisenberg: mount georg"
-ssh heisenberg.physik.uni-bonn.de 'mount /home/stollenw/runs/georg'
-echo "heisenberg: mount deb"
-ssh heisenberg.physik.uni-bonn.de 'mount /home/stollenw/runs/deb'
-ssh heisenberg.physik.uni-bonn.de 'mount /mnt/dhome/'
-echo "lunz: mount georg"
-ssh lunzamsee.th.physik.uni-bonn.de 'sshfs stollenw@stgeorgenamreith:/ext/stollenw /ext/stollenw'
+echo "tradigist: mount agem"
+ssh tradigist.th.physik.uni-bonn.de 'mount /users/stollenw/runs/agem'
+echo "tradigist: mount bgem"
+ssh tradigist.th.physik.uni-bonn.de 'mount /users/stollenw/runs/bgem'
+echo "tradigist: mount cgem"
+ssh tradigist.th.physik.uni-bonn.de 'mount /users/stollenw/runs/cgem'
+echo "tradigist: mount lunz local"
+ssh tradigist.th.physik.uni-bonn.de 'mount /users/stollenw/runs/lunz'
 
 ipa='131.220.161.87'
 ipb='131.220.161.110'
