@@ -273,6 +273,23 @@ class bulk_database:
 		# sort by 1st column i.e. material
 		self.data=sorted(self.data, key = lambda element : element[0])
 
+	# restore database from archive folder: e.g. topResultsFolder=results/bulk/
+	def restore(self, topResultsFolder):
+		for topfolder in os.listdir(topResultsFolder):
+			for d in os.listdir(os.path.join(topResultsFolder,topfolder)):
+				folder=os.path.join(topResultsFolder,topfolder, d)
+				if os.path.isdir(folder) and isResults(folder):
+					(material, ni, T, mag, path)=self.extractData(folder)
+					# get path from origin
+					originfilename="%s/origin.txt" % folder
+					path=extractResultValue(originfilename).rstrip('\n')
+					if not self.exists(material, ni, T):
+						print "Adding dataset: %s, ni=%06.4f, T=%05.1f, mag=%06.4f, Source=%s" %(material, ni, T, mag, path)
+						self.data.append((material, ni, T, mag, path))
+	
+		# sort by 1st column i.e. material
+		self.data=sorted(self.data, key = lambda element : element[0])
+
 	def get_output(self, material, ni):
 		if ((str(ni).find('e')==-1) and len(str(ni))<=6):
 			return "%s_ni%06.4f/" % (material, ni)

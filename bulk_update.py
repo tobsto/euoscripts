@@ -22,6 +22,7 @@ the last values e.g. "all 0.01
   	parser.add_argument('-d', '--database', default='/users/stollenw/projects/euo/database/bulk.db', help='Database file name')
 	parser.add_argument('-s', '--dataset', nargs='*', help=dataset_help)
   	parser.add_argument('--overwrite', action='store_true', help='Overwrite database')
+  	parser.add_argument('--restore', action='store_true', help='Restore database from result folder e.g. results/bulk')
   	parser.add_argument('--archive', action='store_true', help='Archive all results')
   	parser.add_argument('--archive_destination', default='/users/stollenw/projects/euo/results/bulk/', help='Archive folder')
   	parser.add_argument('--dry', action='store_true', help='Simulate updating of database')
@@ -37,7 +38,7 @@ the last values e.g. "all 0.01
 	# read in database if it already exists and overwrite flag is not given
 	if os.path.exists(args.database) and not args.overwrite:
 		t.read(args.database)
-	if args.dataset==None:
+	if args.dataset==None and not args.restore:
 		t.fill(args.input, args.overwrite)
 		if not args.dry:
 			t.write(args.database)
@@ -48,6 +49,10 @@ the last values e.g. "all 0.01
 					t.archive(args.archive_destination, None, os.path.abspath(iput))
 		else:
 			print "Archive folder would be: ", args.archive_destination
+	elif args.dataset==None and args.restore:
+		t.restore(args.input[0])
+		if not args.dry:
+			t.write(args.database)
 	else:
 		t.archive(args.archive_destination, args.dataset)
 	
