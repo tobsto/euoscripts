@@ -333,7 +333,7 @@ negative['N0']=0
 physical_systems.append(physical_system (name, material_class, positive, negative, (left,right)))
 
 # EuGdO-Metal-Heterostructure with intensified interface coupling
-JcfpValues=(0.01, 0.02, 0.03, 0.04, 0.0405, 0.05)
+JcfpValues=(0.01, 0.02, 0.025,0.03,0.035, 0.04, 0.0405, 0.05)
 for Jcfp in JcfpValues:
 	name='EuGdO-Metal-Heterostructure-eta1e-4-IIC-Jcfp%06.4f' % Jcfp
 	material_class='heterostructure'

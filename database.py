@@ -71,7 +71,7 @@ workers.append(worker(	'cgem.th.physik.uni-bonn.de',
 			'/users/stollenw/runs/cgem/',
 			'/home/stollenw/',
 			'mpirun --hostfile /home/stollenw/hostfiles/hostfile_cgem'))
-workers.append(worker(	'steinschal-tradigist',
+workers.append(worker(	'lunzamsee',
 			'/users/stollenw/runs/lunz/',
 			'/ext/stollenw/',
 			'mpirun --hostfile /ext/stollenw/hostfile'))

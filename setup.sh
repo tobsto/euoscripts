@@ -1,13 +1,13 @@
 #!/bin/bash
 
-echo "tradigist: mount agem"
-ssh tradigist.th.physik.uni-bonn.de 'mount /users/stollenw/runs/agem'
-echo "tradigist: mount bgem"
-ssh tradigist.th.physik.uni-bonn.de 'mount /users/stollenw/runs/bgem'
-echo "tradigist: mount cgem"
-ssh tradigist.th.physik.uni-bonn.de 'mount /users/stollenw/runs/cgem'
-echo "tradigist: mount lunz local"
-ssh tradigist.th.physik.uni-bonn.de 'mount /users/stollenw/runs/lunz'
+echo "mount agem"
+sshfs stollenw@agem.th.physik.uni-bonn.de:/home/stollenw /users/stollenw/runs/agem
+echo "mount bgem"
+sshfs stollenw@bgem.th.physik.uni-bonn.de:/home/stollenw /users/stollenw/runs/bgem
+echo "mount cgem"
+sshfs stollenw@cgem.th.physik.uni-bonn.de:/home/stollenw /users/stollenw/runs/cgem
+echo "mount lunz"
+sshfs stollenw@lunzamsee.th.physik.uni-bonn.de:/ext/stollenw /users/stollenw/runs/lunz
 
 ipa='131.220.161.87'
 ipb='131.220.161.110'
